@@ -52,8 +52,8 @@ async fn main() {
     assert_eq!(blockchain.chain[1].data, "new block created".to_string());
     Blockchain::add_block_to_chain(&mut blockchain, "new block created, 2".to_string()); // creating a new block again
     assert_eq!(blockchain.chain[2].data, "new block created, 2".to_string()); //checking that the new block has been pushed.
-    let block2hash = Blockchain::get_last_block_hash(&mut blockchain);
-    let block_previous_hash = blockchain.chain[2].previous_hash.clone();
+    let block2hash = Blockchain::get_any_block_hash(&blockchain, 1); // block 2 is index 1.
+    let block_previous_hash = Blockchain::get_index_block_previous_hash(&blockchain, 2); // this is block 3 but the index is 2.
     assert_eq!(block2hash, block_previous_hash, "first hash: {:?} second hash: {:?}",block2hash, block_previous_hash );
 }
 #[test]

@@ -54,8 +54,8 @@ impl Block {
             self.nonce += 1;
         }
         println!(
-            "Block {} mined! Hash: {} | Nonce: {}",
-            self.index, self.hash, self.nonce
+            "Block {} mined! Previous Hash: {} Hash: {} | Nonce: {}",
+            self.index, self.previous_hash, self.hash, self.nonce
         );
     }
 }
