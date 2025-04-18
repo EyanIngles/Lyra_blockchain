@@ -12,7 +12,8 @@ impl P2PNode {
         P2PNode { blockchain }
     }
 
-    pub async fn start_server(&self, address: &str) {
+    pub async fn start_server(&self, address: &str) { // i think that the sockets or IP address when a node is started should be saved somewhere and then used
+        // that address to ping to see if it is connectable.
         let listener = TcpListener::bind(address).await.expect("Failed to bind server"); // we are calling start server function.
 
         println!("✅ P2P Server listening on {}", address);

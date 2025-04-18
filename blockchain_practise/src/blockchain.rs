@@ -1,14 +1,13 @@
 use crate::block::Block;
-use std::fs;
-use std::sync::{Arc, Mutex};
-use serde::Serialize;
+pub use serde_derive::{Serialize, Deserialize};
 
 
+#[derive(serde_derive::Serialize, Deserialize)]
 #[derive(Debug, PartialEq)]
 pub struct Blockchain {
     pub chain_version: u8,
     pub chain_name: String,
-    pub chain: Vec<Block>,
+    pub block: Vec<Block>,
 }
 
 impl Blockchain {
@@ -19,7 +18,7 @@ impl Blockchain {
         let mut blockchain = Blockchain {
             chain_version: 1,
             chain_name: "Mizu".to_string(),
-            chain: vec![]
+            block: vec![]
         };
         Self::push_block_onto_chain(&mut blockchain, genesis_block);
         blockchain
@@ -30,57 +29,63 @@ impl Blockchain {
         let (last_index, previous_hash) = self.get_last_block_index_and_previous_hash();
         let new_index = last_index +1;
         let block = Block::new(new_index, previous_hash, data);
-        self.chain.push(block.clone());
+        self.block.push(block.clone());
         println!("block info here: {:?}", block.clone());
     }
     fn push_block_onto_chain(blockchain: &mut Blockchain, block: Block) {
-        blockchain.chain.push(block);
+        blockchain.block.push(block);
     }
 
     pub fn get_last_block_index_and_previous_hash(&self) -> (usize, String) {
-        let block = self.chain.last().clone();
+        let block = self.block.last().clone();
         let index = block.unwrap().index;
         let hash = block.unwrap().hash.to_string();
         return (index, hash)
     }
+    #[warn(dead_code)]
     pub fn get_index_block_previous_hash(&self, index: usize) -> String {
-        let block = self.chain.get(index).clone();
+        let block = self.block.get(index).clone();
         let hash = block.unwrap().previous_hash.to_string();
         return hash
     }
-
+    pub fn get_block_via_index(&self, index: usize) -> Option<&Block> {
+        let block = self.block.get(index).clone();
+        return block
+    }
+    #[warn(dead_code)]
     pub fn get_last_block_index_and_hash(&self) -> (usize, String) {
-        let block = self.chain.last().clone();
+        let block = self.block.last().clone();
         let index = block.unwrap().index;
         let hash = block.unwrap().hash.to_string();
         return (index, hash)
     }
-
+    #[warn(dead_code)]
     pub fn get_any_block_index_and_hash(&self, block_number: usize) -> (usize, String) {
-        let block = self.chain.get(block_number).clone();
+        let block = self.block.get(block_number).clone();
         let index = block.unwrap().index;
         let hash = block.unwrap().hash.to_string();
         return (index, hash)
     }
-
+    #[warn(dead_code)]
     pub fn get_any_block_hash(&self, block_number: usize) -> String {
-        let block = self.chain.get(block_number).clone();
+        let block = self.block.get(block_number).clone();
         let hash = block.unwrap().hash.to_string();
         return hash
     }
 
     pub fn get_last_block(&self) -> Option<&Block> {
-        let block = self.chain.last().clone();
+        let block = self.block.last().clone();
         return block
     }
 
     pub fn get_last_block_hash(&self) -> String {
-        let block = self.chain.last().clone();
+        let block = self.block.last().clone();
         let hash = block.unwrap().hash.to_string();
         return hash
     }
+    #[warn(dead_code)] //this is being used for testing.
     pub fn get_block_length(&self) -> usize {
-        let block_length = self.chain.len().clone();
+        let block_length = self.block.len().clone();
         return block_length
     }
 

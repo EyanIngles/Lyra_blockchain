@@ -1,7 +1,10 @@
 use sha2::{Digest, Sha256}; // Hashing library
 use std::time::{SystemTime, UNIX_EPOCH};
+pub use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq)]
+
+#[derive(serde_derive::Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Block {
     pub index: usize,
     pub timestamp: u64,
