@@ -46,9 +46,12 @@ async fn main() { // need to ping and ensure that the server is running, this wi
     };
    
     let blockchain_to_write = Arc::new(Mutex::new(blockchain));
+    let p2p_node = P2PNode::new(blockchain_to_write.clone());
+
     // create a match to then point it the a function.
     match command {
         Path::NewBlock => create_new_block(blockchain_to_write.clone(), &args[2]),
+        Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
         _ => todo!()
     };
 
@@ -63,21 +66,13 @@ async fn main() { // need to ping and ensure that the server is running, this wi
 
     // okay, so i need to have a json file that exists and ill have it so that if it isnt found, then create a new file with the file name.
     // then we will refer to the blockchain details and make sure they match otherwise return err.
-    let p2p_node = P2PNode::new(blockchain_to_write.clone());
 
     if is_requesting_new_wallet { // this generates a new wallet and attached a name to it. 
         wallet_name = args[2].clone();
         let my_wallet = UserWallet::generate_new_wallet(wallet_name.to_string()); // this does work.
         println!("new wallet:: {:?}", my_wallet);
         return
-    }   
-    if command == Path::StartServer {
-        let mut address = "0"; // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
-        if args[2] == "new" {
-            address = "127.0.0.1:8080"
-        }
-        p2p_node.start_server(&address).await; //TODO will want to ping to see if socket is clear and then run that socket address.
-    } 
+    }    
     
     if command == Path::GetWallet { // this is new block..... not getwallet, get wallet is for testing..
         let address = format!("127.0.0.1:8080");
@@ -127,6 +122,18 @@ pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
 async fn new_blockchain() -> Blockchain {
     let blockchain = Blockchain::new();
     return blockchain
+}
+async fn start_server(p2p_node: &P2PNode, address: String){ // TODO:  will want to write another json file to keep track of what servers are
+    // live and which are not live aswell as validators so that they are able to be pinged.
+    if address == "default" || address == "" {
+        p2p_node.start_server("127.0.0.1:8080").await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
+    } else {
+        P2PNode::monitor_network_cluster().await; // TODO: not working, this should be pinging a random user who is in the data base every so often.
+        
+        p2p_node.start_server(&address).await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
+        
+    }
+    // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
 }
 #[test]
     async fn test_creating_2_blocks() {

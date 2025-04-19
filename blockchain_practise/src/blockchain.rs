@@ -25,7 +25,7 @@ impl Blockchain {
     }
 
   
-    pub fn add_block_to_chain(&mut self, data: String) { // doesnt push new block onto the array, it over writes it the existing block.
+    pub fn add_block_to_chain(&mut self, data: String) { 
         let (last_index, previous_hash) = self.get_last_block_index_and_previous_hash();
         let new_index = last_index +1;
         let block = Block::new(new_index, previous_hash, data);

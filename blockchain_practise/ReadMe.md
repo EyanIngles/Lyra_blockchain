@@ -25,3 +25,15 @@ you can also use _ in between words if you don't want to use "String"
 ```bash
 cargo run new-block block_data_here
 ```
+
+
+
+## Testing your local network TCP port is active
+in your terminal while you have the server going use the following command.
+```bash 
+nc -vz <server::port>
+```
+you should expect to see a result such as the following.
+```bash
+Connection to 127.0.0.1 port 8080 [tcp/http-alt] succeeded!
+```
