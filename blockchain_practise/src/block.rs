@@ -1,6 +1,6 @@
 use sha2::{Digest, Sha256}; // Hashing library
 use std::time::{SystemTime, UNIX_EPOCH};
-pub use serde_derive::{Serialize, Deserialize};
+pub use serde_derive::Deserialize;
 
 
 #[derive(serde_derive::Serialize, Deserialize)]

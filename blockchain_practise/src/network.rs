@@ -3,15 +3,16 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::sync::{Arc, Mutex};
 use crate::blockchain::Blockchain;
 
+
 pub struct P2PNode {
-    pub blockchain: Arc<Mutex<Blockchain>>,
+    pub _blockchain: Arc<Mutex<Blockchain>>,
 }
 
 impl P2PNode {
-    pub fn new(blockchain: Arc<Mutex<Blockchain>>) -> Self {
-        P2PNode { blockchain }
+    pub fn new(_blockchain: Arc<Mutex<Blockchain>>) -> Self {
+        P2PNode { _blockchain }
     }
-
+    
     pub async fn start_server(&self, address: &str) { // i think that the sockets or IP address when a node is started should be saved somewhere and then used
         // that address to ping to see if it is connectable.
         let listener = TcpListener::bind(address).await.expect("Failed to bind server"); // we are calling start server function.
@@ -24,6 +25,7 @@ impl P2PNode {
 
             tokio::spawn(async move {
                 let mut buffer = vec![0; 1024];
+                #[warn(unreachable_patterns)]
                 match socket.read(&mut buffer).await {
                     Ok(size) => {
                         let recieved_data = String::from_utf8_lossy(&buffer[..size]);
@@ -32,15 +34,11 @@ impl P2PNode {
                         let response = "Block received";
                         socket.write_all(response.as_bytes()).await.expect("Failed to send response");
                     }
-                    Ok(_) => {
-                        println!("🔌 Client disconnected.");
-                        return
-                    }
+                    
                     Err(e) => {
                         println!("⚠️ Error reading data: {}", e);
                         return
                     }
-                    Err(e) => {println!("⚠️ Error reading data: {}", e)},
                 }
             });
         }

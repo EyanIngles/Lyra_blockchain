@@ -5,12 +5,13 @@ mod wallet;
 mod client;
 
 use client::Path;
+use crate::wallet::UserWallet;
 use std::fs;
 use std::path;
 use blockchain::Blockchain;
 use network::P2PNode;
 use tokio::test;
-use wallet::UserWallet;
+// use wallet::UserWallet;
 use std::sync::{Arc, Mutex};
 use std::env;
 
@@ -38,10 +39,9 @@ async fn main() { // need to ping and ensure that the server is running, this wi
         let _ = fs::write("./blockchain.json", data);
         blockchain
     } else {
-        println!("blockchain found...");
+        println!("\nblockchain found and fetching data now... \nplease wait.. \n");
         let file = fs::read(path).expect("unable to open blockchain file...");
         let blockchain: Blockchain = serde_json::from_slice(&file).expect("erorr...");
-        println!("blockchain details:: {:?}", blockchain);
         blockchain
     };
    
@@ -56,7 +56,7 @@ async fn main() { // need to ping and ensure that the server is running, this wi
 
 
     let is_requesting_new_wallet = args[1] == "create_wallet";
-    //let wallet_name;
+    let wallet_name;
 
     // ✅ Load the blockchain from file instead of creating a new one
     // mental note, I think that this is just recreating a new blockchain eachtime so a new one is being started.
@@ -65,11 +65,12 @@ async fn main() { // need to ping and ensure that the server is running, this wi
     // then we will refer to the blockchain details and make sure they match otherwise return err.
     let p2p_node = P2PNode::new(blockchain_to_write.clone());
 
-    //if is_requesting_new_wallet { // this generates a new wallet and attached a name to it. 
-    //    wallet_name = args[2].clone();
-    //    my_wallet = UserWallet::generate_new_wallet(wallet_name.to_string()); // this does work.
-    //    return
-    //}   
+    if is_requesting_new_wallet { // this generates a new wallet and attached a name to it. 
+        wallet_name = args[2].clone();
+        let my_wallet = UserWallet::generate_new_wallet(wallet_name.to_string()); // this does work.
+        println!("new wallet:: {:?}", my_wallet);
+        return
+    }   
     if command == Path::StartServer {
         let mut address = "0"; // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
         if args[2] == "new" {
@@ -80,9 +81,9 @@ async fn main() { // need to ping and ensure that the server is running, this wi
     
     if command == Path::GetWallet { // this is new block..... not getwallet, get wallet is for testing..
         let address = format!("127.0.0.1:8080");
-        let mut blockchain_update = blockchain_to_write.lock().unwrap();
-        println!("blockchain_update variable: {:?}", blockchain_update);
-        println!("args[2]: {:?}", args[2]);
+        let blockchain_update = blockchain_to_write.lock().unwrap();
+        //println!("blockchain_update variable: {:?}", blockchain_update);
+        //println!("args[2]: {:?}", args[2]);
         if command == Path::GetBlock {
             
             assert!(args[2] != ""); // asserting that args[2] is not an empty string
@@ -102,16 +103,26 @@ async fn main() { // need to ping and ensure that the server is running, this wi
        // blockchain_update.add_block_to_chain(new_block_data.clone());
 //
        // println!("✅ New block added! Latest block: {:?}", blockchain_update.get_last_block());
-       // let hash = blockchain_update.get_last_block_hash().clone();
-       // p2p_node.connect_to_peer(&address, hash).await; // sending the message off to the peer.
+       let hash = blockchain_update.get_last_block_hash().clone();
+       p2p_node.connect_to_peer(&address, hash).await; // sending the message off to the peer.
 
     }
 }
 pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
-    let main_server = format!("127.0.0.1:8080"); // main sever..
-        println!("Blockchain details: {:?}", blockchain);
-        println!("args[2]: {:?}", data);
-        return
+    //let main_server = format!("127.0.0.1:8080"); // main sever..
+
+    // Lock the blockchain (expect will unwrap or panic if poisoned)
+    let mut blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
+    blockchain_lock.add_block_to_chain(data.to_string());
+    println!("\n Blockchain details: {:?}", blockchain_lock);
+
+    let blockchain_copy = blockchain_lock.clone();
+    drop(blockchain_lock);
+
+
+    let data_update = serde_json::to_vec(&blockchain_copy).expect("did not searlise");
+    let _ = fs::write("./blockchain.json", data_update);
+    return
 }
 async fn new_blockchain() -> Blockchain {
     let blockchain = Blockchain::new();

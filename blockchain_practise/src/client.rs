@@ -14,12 +14,12 @@ pub enum Path {
     NewBlock,
     // help: bool, // should have a help command to show how to use or show what commands are available.
 }
-pub enum Args_process { // this is to catch any errors if needed and used to also maybe as the process is waiting?
-    Success,
-    Fail,
-    Proceeding,
-    Error, 
-}
+// pub enum Args_process { // this is to catch any errors if needed and used to also maybe as the process is waiting?
+//     Success,
+//     Fail,
+//     Proceeding,
+//     Error, 
+// }
 
 
 

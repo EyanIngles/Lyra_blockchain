@@ -1,9 +1,9 @@
 use crate::block::Block;
-pub use serde_derive::{Serialize, Deserialize};
+pub use serde_derive::Deserialize;
 
 
 #[derive(serde_derive::Serialize, Deserialize)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Blockchain {
     pub chain_version: u8,
     pub chain_name: String,
@@ -119,8 +119,8 @@ fn testing_blocks_are_being_added_to_chain() {
     let mut blockchain = Blockchain::new();
     let data = "random Data".to_string();
     let data2 = "random Data2".to_string();
-    let block1 = Blockchain::add_block_to_chain(&mut blockchain, data);
-    let block2 = Blockchain::add_block_to_chain(&mut blockchain, data2);
+    let _block1 = Blockchain::add_block_to_chain(&mut blockchain, data);
+    let _block2 = Blockchain::add_block_to_chain(&mut blockchain, data2);
     let chain_length = Blockchain::get_block_length(&blockchain);
     assert_eq!(chain_length, 3);
 }
