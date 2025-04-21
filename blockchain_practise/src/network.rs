@@ -32,7 +32,8 @@ impl P2PNode {
     pub async fn start_server(&self, address: &str) { // i think that the sockets or IP address when a node is started should be saved somewhere and then used
         // that address to ping to see if it is connectable.
         let network_path = "./network.json";
-        let mut network_cluster = if !path::Path::new(network_path).exists() { // if file does not exist, then create new without any checks
+        let _network_cluster = if !path::Path::new(network_path).exists() { 
+            // if file does not exist, then create new without any checks
             print!("\nno server found, creeating new cluster.... \nplease wait...\n");
             let new_network = Network {
                 id: 1,
@@ -46,40 +47,52 @@ impl P2PNode {
             let content = serde_json::to_vec(&new_cluster).expect("could not searlise");
             let _ = fs::write(network_path, content).expect("could not write new file for network.json");
             new_cluster
-        } else { // else file exists, check to see if the user has an account if not create a new id
+        } else { 
+            // else file exists, check to see if the user has an account if not create a new id
             print!("Network cluster found... \nFetching data now, Please wait....\n");
             let file = fs::read(network_path).expect("could not find file path");
-            let network: Cluster = serde_json::from_slice(&file).expect("could not Deserialize");
+            let mut network: Cluster = serde_json::from_slice(&file).expect("could not Deserialize");
+            let mut index: usize = 0;
+            let mut address_found = false;
+            for item in network.networks.clone() {
+                if item.address == address { // will need to change the is_active status to "true";
+                    let id: usize = item.id.try_into().unwrap();
+                    index = id - 1;
+                    println!("\nAddress found: - your id is... {:?}", index);
+                    address_found = true;
+                    break;
+                } 
+            };
+            println!("printing here:: {:?}", network.networks[index].is_active);
+            println!("index number:: {:?}", index);
+            if !network.networks[index].is_active {
+                // need this to turn a valid users is_active to true if they have been set to false so that they can be pinged.
+                println!("before changing status ==: {:?}", network.networks[index].is_active);
+                let new_cluster = P2PNode::changing_network_status(network.clone(), index, true, address.to_string().clone()).await;
+                let serde_cluster = serde_json::to_vec(&new_cluster).expect("was unable to desearlise.");
+                fs::write("./network.json", serde_cluster).expect("unable to write");
+                println!("after changing status ==: {:?}", network.networks[index].is_active);
+            }
+            if !address_found {
+                let next_id = network.networks.len();
+                let new_id: u8 = (next_id + 1).try_into().unwrap();
+                let new_network = Network {
+                    id: new_id,
+                    is_active: true,
+                    address: address.to_string(),
+                };
+                network.networks.push(new_network);
+                let data = serde_json::to_vec(&network).expect("unable to serialize");
+                fs::write(network_path, data).expect("unable to write file");
+
+                println!("❌ Address not found. Created new ID: {:?}", new_id);
+            }
+            P2PNode::monitor_network_cluster().await; // pinging other validators
             network
         };
-        // attempt to connect to peers - 
-        //let mut stream = TcpStream::connect("127.0.0.1:8080").await.expect("unable to connect to address");
-        //let _ = stream.write_all(b"hello world!").await;
 
-        let listener = TcpListener::bind(address).await.expect("Failed to bind server"); // we are calling start server function.
-        let mut _network_id = 0;
-        let _network = for item in &network_cluster.networks {
-            if item.address == address {
-                _network_id = item.id;
-                println!("your id is:: {:?}", _network_id);
-                break;
-            } else {
-                print!("unable find your address and id... \nadding you into the system...\n");
-                let next_id = network_cluster.networks.len();
-                let new_network = Network {
-                    id: next_id.try_into().unwrap(),
-                    is_active: true,
-                    address: address.to_string()
-                };
-                network_cluster.networks.push(new_network);
-                let de = serde_json::to_vec(&network_cluster).expect("unable to Searlise");
-                let _ = fs::write(network_path, de);
-                break
-            }
-        };
-
+        let listener = TcpListener::bind(address).await.expect("Failed to bind server"); 
         println!("✅ P2P Server listening on {}", address);
-        println!("Your P2P ID is: {}", _network_id);
 
         loop {
             let (mut socket, _) = listener.accept().await.expect("Failed to accept connection");
@@ -115,7 +128,7 @@ pub async fn monitor_network_cluster() {
             let address = cluster.networks[number].address.clone();
 
             if is_active {
-                println!("✅ top");
+
                 let connection = TcpStream::connect(address.clone());
                 if connection.await.is_err() {
                     print!("unable to get a hold of address socket, changing their status to false.");
@@ -123,12 +136,9 @@ pub async fn monitor_network_cluster() {
                     let serde_cluster = serde_json::to_vec(&new_cluster).expect("was unable to desearlise.");
                     fs::write("./network.json", serde_cluster).expect("unable to write");
                 }
-                println!("connected to address: {}", &address)
-            } else {
-                println!("❌ bottom");
-            }
+            } 
 
-            sleep(Duration::from_secs(1)).await; // Shortened for realism
+            sleep(Duration::from_secs(4)).await; // Shortened for realism
         }
     });
 }

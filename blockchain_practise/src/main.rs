@@ -126,12 +126,10 @@ async fn new_blockchain() -> Blockchain {
 async fn start_server(p2p_node: &P2PNode, address: String){ // TODO:  will want to write another json file to keep track of what servers are
     // live and which are not live aswell as validators so that they are able to be pinged.
     if address == "default" || address == "" {
-        p2p_node.start_server("127.0.0.1:8080").await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
+        p2p_node.start_server("127.0.0.1:8080").await;
+        //TODO will want to ping to see if socket is clear and then run that socket address if clear.
     } else {
-        P2PNode::monitor_network_cluster().await; // TODO: not working, this should be pinging a random user who is in the data base every so often.
-        
         p2p_node.start_server(&address).await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
-        
     }
     // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
 }
