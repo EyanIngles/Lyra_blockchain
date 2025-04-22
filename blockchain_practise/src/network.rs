@@ -87,7 +87,7 @@ impl P2PNode {
 
                 println!("❌ Address not found. Created new ID: {:?}", new_id);
             }
-            P2PNode::monitor_network_cluster().await; // pinging other validators
+            P2PNode::monitor_network_cluster(address.to_string().clone()).await; // pinging other validators
             network
         };
 
@@ -118,7 +118,7 @@ impl P2PNode {
         }
         
     }
-pub async fn monitor_network_cluster() {
+pub async fn monitor_network_cluster(caller_address: String) {
     spawn(async move {
         loop {
             // get updated cluster list.
@@ -126,13 +126,11 @@ pub async fn monitor_network_cluster() {
             let number: usize = P2PNode::random_number(cluster.clone()).try_into().unwrap(); // clone is fine if needed
             let is_active = cluster.networks[number].is_active;
             let address = cluster.networks[number].address.clone();
-
-            if is_active {
-
-                let connection = TcpStream::connect(address.clone());
+            if is_active && caller_address != cluster.networks[number].address {
+                let connection = TcpStream::connect( &address);
                 if connection.await.is_err() {
                     print!("unable to get a hold of address socket, changing their status to false.");
-                    let new_cluster = P2PNode::changing_network_status(cluster.clone(), number, false, address.clone()).await;
+                    let new_cluster = P2PNode::changing_network_status(cluster.clone(), number, false, address).await;
                     let serde_cluster = serde_json::to_vec(&new_cluster).expect("was unable to desearlise.");
                     fs::write("./network.json", serde_cluster).expect("unable to write");
                 }
