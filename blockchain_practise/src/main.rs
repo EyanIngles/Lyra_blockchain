@@ -169,5 +169,11 @@ async fn test_indexed_functions_work() {
     assert_ne!(index1, 2,"index: {:?} last_index: {:?}", index1, last_index);
     assert_ne!(hash1, last_hashh, "hash: {:?} last_hash: {:?}", hash1, last_hashh);
 }
+#[test]
+pub async fn testing_connecting_to_peer_not_complete() { 
+    let blockchain = Blockchain::new();
+    let _p2p_node = P2PNode::new(Arc::new(Mutex::new(blockchain.clone())));
+    //P2PNode::start_server(&p2p_node, "127.0.0.1:8080").await; // starting default server. 
+    // The above goes on a forever loop so testing will need to kill the server after test. 
 
-
+}
