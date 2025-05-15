@@ -52,6 +52,7 @@ async fn main() { // need to ping and ensure that the server is running, this wi
     match command {
         Path::NewBlock => create_new_block(blockchain_to_write.clone(), &args[2]),
         Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
+        Path::GetBlock => get_block(blockchain_to_write.clone(), args[2].to_string()).await,
         _ => todo!()
     };
 
@@ -123,8 +124,7 @@ async fn new_blockchain() -> Blockchain {
     let blockchain = Blockchain::new();
     return blockchain
 }
-async fn start_server(p2p_node: &P2PNode, address: String){ // TODO:  will want to write another json file to keep track of what servers are
-    // live and which are not live aswell as validators so that they are able to be pinged.
+async fn start_server(p2p_node: &P2PNode, address: String){ 
     if address == "default" || address == "" {
         p2p_node.start_server("127.0.0.1:8080").await;
         //TODO will want to ping to see if socket is clear and then run that socket address if clear.
@@ -133,6 +133,14 @@ async fn start_server(p2p_node: &P2PNode, address: String){ // TODO:  will want 
     }
     // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
 }
+async fn get_block(blockchain: Arc<Mutex<Blockchain>>, arg1: String) {
+    let index: usize = arg1.parse().expect("Err: Arg is not a number"); 
+    let blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
+    let indexed_block = blockchain_lock.get_block_via_index(index);
+    println!("blockchain Data: {:?}", indexed_block);
+
+    }
+
 #[test]
     async fn test_creating_2_blocks() {
     let mut blockchain = Blockchain::new(); // creating the blockchain.
