@@ -14,8 +14,4 @@ hex = "0.4.3"
 time = "0.3.39"
 serde_derive = "1.0.219"
 
-[alias]     # command aliases
-b = "test"
-t = "test"
-get = "run"
 
