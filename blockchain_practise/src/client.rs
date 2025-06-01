@@ -1,28 +1,25 @@
 // This file will be used for dealing with the args being parsed in.
 
-
 // enum list to give us a selection of what to do such as get_block enum value that if the args being parsed in make this the path to take,
 // we will set that enum to true.
 
-
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Path {
     StartServer,
     CreateWallet,
     GetWallet,
     GetBlock,
     NewBlock,
+    WalletLogin,
+    ImportWallet,
     // help: bool, // should have a help command to show how to use or show what commands are available.
 }
 // pub enum Args_process { // this is to catch any errors if needed and used to also maybe as the process is waiting?
 //     Success,
 //     Fail,
 //     Proceeding,
-//     Error, 
+//     Error,
 // }
-
-
-
 
 pub fn sort_client_args_direction(input: &str) -> Path {
     match input {
@@ -31,16 +28,21 @@ pub fn sort_client_args_direction(input: &str) -> Path {
         "new-block" => Path::NewBlock,
         "create-wallet" => Path::CreateWallet,
         "get-wallet" => Path::GetWallet,
-        &_ => todo!("Error: Unsupported argument passed")
+        "wallet-login" => Path::WalletLogin,
+        "import-wallet" => Path::ImportWallet,
+        &_ => todo!("Error: Unsupported argument passed"),
     }
-} 
+}
 
-
-
-
-#[test]
+#[test] // TODO: update test to ensure all paths are on here.
 pub fn getting_args_correctly() {
-    let (server_arg, get_block_arg, create_wallet_arg, get_wallet_arg, get_new_block) = ("server", "get-block", "create-wallet", "get-wallet", "new-block");
+    let (server_arg, get_block_arg, create_wallet_arg, get_wallet_arg, get_new_block) = (
+        "server",
+        "get-block",
+        "create-wallet",
+        "get-wallet",
+        "new-block",
+    );
     // testing to see if the server arg works.
     let server = Path::StartServer;
     let server_enum = sort_client_args_direction(server_arg);
@@ -71,7 +73,6 @@ pub fn getting_args_correctly() {
     assert_ne!(new_block_enum, wallet);
     assert_ne!(new_block_enum, getting_wallet);
     assert_eq!(new_block_enum, new_block);
-
 }
 
 #[test]

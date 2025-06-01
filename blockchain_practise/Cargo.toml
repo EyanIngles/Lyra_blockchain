@@ -1,5 +1,5 @@
 [package]
-name = "simple_blockchain"
+name = "Mizu_Blockchain"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,5 +13,5 @@ k256 = "0.13.4"
 hex = "0.4.3"
 time = "0.3.39"
 serde_derive = "1.0.219"
-
+generic-array = "0.14" # only if needed directly
 

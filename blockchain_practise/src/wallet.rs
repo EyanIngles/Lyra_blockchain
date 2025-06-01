@@ -1,16 +1,26 @@
+use generic_array::{arr, sequence::GenericSequence, typenum, GenericArray};
 use hex;
 use k256::{ecdsa::SigningKey, elliptic_curve::rand_core::OsRng};
+pub use serde_derive::Deserialize;
 
-#[derive(PartialEq, Debug)]
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Currency {
     pub name: String,
     pub amount: u128,
 }
-#[derive(PartialEq, Debug)]
+
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct UserWallet {
     pub name: String,
     pub address: String,
-    pub currency_accounts: Currency,
+    pub currency_accounts: Vec<Currency>,
+}
+
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct WalletCache {
+    pub wallet_info: UserWallet,
+    pub private_key: [u8; 32],
+    pub password: String,
 }
 
 impl UserWallet {
@@ -25,7 +35,7 @@ impl UserWallet {
         let wallet = UserWallet {
             name: name.clone(),
             address: public_key.to_string(),
-            currency_accounts: current_account,
+            currency_accounts: vec![],
         };
         println!("New Wallet Users: {:?}", wallet.name);
         println!("Private Key: {:?}", private_key);
@@ -54,4 +64,3 @@ fn test_wallet_generating() {
 
     assert_ne!(wallet1, wallet2);
 }
-

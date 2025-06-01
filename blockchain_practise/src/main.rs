@@ -5,20 +5,25 @@ mod network;
 mod wallet;
 
 use crate::wallet::UserWallet;
+use crate::wallet::WalletCache;
 use blockchain::Blockchain;
 use client::Path;
+use generic_array::{arr, sequence::GenericSequence, typenum, GenericArray};
+use hex::FromHex;
+use k256::SecretKey;
+use k256::{ecdsa::SigningKey, elliptic_curve::rand_core::OsRng};
 use network::P2PNode;
 use std::env;
 use std::fs;
 use std::path;
 use std::sync::{Arc, Mutex};
 use tokio::test;
+use wallet::Currency;
 
 #[tokio::main]
+
 async fn main() {
-    // need to ping and ensure that the server is running, this will then route the data and maybe have the server send the signal
-    // of the blockchain so that the data can be all sent and stored on that blockchain, this method, we are creating a new blockchain every
-    // time we are calling 'cargo run' we need conditionals to stop this from happening.
+    // TODO: need to ping and ensure that the server is running, this will then route the data and maybe have the server send the signal of the blockchain so that the data can be all sent and stored on that blockchain, this method, we are creating a new blockchain every
 
     let args: Vec<String> = env::args().collect();
 
@@ -53,15 +58,12 @@ async fn main() {
         Path::GetBlock => get_block(blockchain_to_write.clone(), args[2].to_string()).await,
         Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
         Path::CreateWallet => create_wallet(args[2].clone()).await,
+        Path::WalletLogin => wallet_login(args[2].clone(), args[3].clone()).await,
+        Path::ImportWallet => import_wallet(args[2].clone(), args[3].clone()).await,
         _ => todo!(),
     };
-
-    println!("command here::{:?}", command);
 }
 pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
-    //let main_server = format!("127.0.0.1:8080"); // main sever..
-
-    // Lock the blockchain (expect will unwrap or panic if poisoned)
     let mut blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
     blockchain_lock.add_block_to_chain(data.to_string());
     println!("\n Blockchain details: {:?}", blockchain_lock);
@@ -75,19 +77,21 @@ pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
     // added to each validator? could be more efficient.
     return;
 }
+
 async fn new_blockchain() -> Blockchain {
     let blockchain = Blockchain::new();
     return blockchain;
 }
+
 async fn start_server(p2p_node: &P2PNode, address: String) {
     if address == "default" || address == "" {
         p2p_node.start_server("127.0.0.1:8080").await;
-        //TODO will want to ping to see if socket is clear and then run that socket address if clear.
+        //TODO: will want to ping to see if socket is clear and then run that socket address if clear.
     } else {
         p2p_node.start_server(&address).await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
     }
-    // setting to 0, will basically need #TODO is to have 0 as a no so the value must changed otherwise revert.
 }
+
 async fn get_block(blockchain: Arc<Mutex<Blockchain>>, arg1: String) {
     let index: usize = arg1.parse().expect("Err: Arg is not a number");
     let blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
@@ -100,6 +104,71 @@ async fn create_wallet(name: String) {
     // ensure not doubles.
     let _new_wallet = UserWallet::generate_new_wallet(name);
 }
+
+async fn wallet_login(name: String, password: String) {
+    let path = "./localCache.json";
+    let wallet;
+    if path::Path::new(path).exists() {
+        let file = fs::read(path).expect("unable to open blockchain file...");
+        let wallet_cache: UserWallet = serde_json::from_slice(&file)
+            .expect("Err: unable to find any cache, either import wallet or create new.");
+        wallet = wallet_cache;
+    } else {
+        println!("Err: you must import a wallet, you can do this via the follow command; 'cargo run import-wallet <private-key> <password>");
+        return;
+    };
+    let is_password: String = password;
+
+    println!("Wallet input detials are: {:?} - {:?}", name, is_password);
+    println!("Wallet details detials are here: {:?}", wallet);
+}
+
+async fn import_wallet(private: String, password: String) {
+    // println!("Err: The provided private key has a invalid length, Please double check and try again.");
+    let key_bytes: [u8; 32] = <[u8; 32]>::from_hex(private)
+        .expect("Err: Unable to convert private key to bytes, please check your private key");
+    // Convert to GenericArray
+    let key_array = GenericArray::from_slice(&key_bytes);
+    let secret_key =
+        SecretKey::from_bytes(key_array).expect("Err: Unable to convert secret key to bytes.");
+    let signing_key = SigningKey::from(secret_key);
+    let public_key = signing_key.verifying_key();
+
+    let public_key_hex = hex::encode(public_key.to_encoded_point(false).as_bytes());
+    println!("here is your public key: {:?}", public_key_hex);
+    // TODO: check to see if there is a path file and if not, create and import wallet, store
+    // one wallet at a time for the time being.
+    let path = "./localCache.json";
+    if path::Path::new(&path).exists() {
+        // is existing, writing over the old data for the time being.
+        let file = fs::read(path).expect("Err: Unable to read file");
+        let data: WalletCache =
+            serde_json::from_slice(&file).expect("Err: Unable to read files from local cache");
+        println!("reading file... : {:?}", data);
+    } else {
+        let currencies = Currency {
+            name: "coin".to_string(),
+            amount: 0,
+        };
+        let user_info = UserWallet {
+            name: "Eyan".to_string(), // hardcoded for the moment.
+            address: public_key_hex,
+            currency_accounts: vec![], // TODO: will need to make it so we read from the blockchain and
+                                       // fetch these details from the public key generation.
+        };
+
+        let wallet_cache = WalletCache {
+            wallet_info: user_info,
+            private_key: key_bytes,
+            password,
+        };
+        let data = serde_json::to_vec(&wallet_cache).expect("did not searlise");
+        let _ = fs::write("./localCache.json", data);
+    }
+}
+
+// TODO: import wallet to local cache and which will take the private keys in an [u8] and a
+// password.
 
 #[test]
 async fn test_creating_2_blocks() {
