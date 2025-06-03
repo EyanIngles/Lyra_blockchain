@@ -1,5 +1,5 @@
-blockchain_practise/target/
+./target/
 
-blockchain_practise/blockchain.json
-blockchain_practise/network.json
-blockchain_practise/localCache.json
+./blockchain.json
+./network.json
+./localCache.json
