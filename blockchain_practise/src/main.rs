@@ -8,10 +8,10 @@ use crate::wallet::UserWallet;
 use crate::wallet::WalletCache;
 use blockchain::Blockchain;
 use client::Path;
-use generic_array::{arr, sequence::GenericSequence, typenum, GenericArray};
+use generic_array::GenericArray;
 use hex::FromHex;
+use k256::ecdsa::SigningKey;
 use k256::SecretKey;
-use k256::{ecdsa::SigningKey, elliptic_curve::rand_core::OsRng};
 use network::P2PNode;
 use std::env;
 use std::fs;
@@ -58,7 +58,8 @@ async fn main() {
         Path::GetBlock => get_block(blockchain_to_write.clone(), args[2].to_string()).await,
         Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
         Path::CreateWallet => create_wallet(args[2].clone()).await,
-        Path::WalletLogin => wallet_login(args[2].clone(), args[3].clone()).await,
+        Path::WalletLogin => wallet_login().await,
+        Path::WalletLogout => wallet_logout().await,
         Path::ImportWallet => import_wallet(args[2].clone(), args[3].clone()).await,
         _ => todo!(),
     };
@@ -100,27 +101,37 @@ async fn get_block(blockchain: Arc<Mutex<Blockchain>>, arg1: String) {
 }
 
 async fn create_wallet(name: String) {
-    // create check to ensure there is a name and the name is not already in the data base to
-    // ensure not doubles.
+    // TODO: create check to ensure there is a name and the name is not already in the data base to ensure not doubles.
     let _new_wallet = UserWallet::generate_new_wallet(name);
 }
 
-async fn wallet_login(name: String, password: String) {
+async fn wallet_login() {
     let path = "./localCache.json";
     let wallet;
     if path::Path::new(path).exists() {
-        let file = fs::read(path).expect("unable to open blockchain file...");
-        let wallet_cache: UserWallet = serde_json::from_slice(&file)
-            .expect("Err: unable to find any cache, either import wallet or create new.");
-        wallet = wallet_cache;
+        let file = fs::read(path).expect("Err: Unable to open localCache file...");
+        let wallet_cache: WalletCache = serde_json::from_slice(&file).expect("Err:");
+        wallet = wallet_cache
     } else {
         println!("Err: you must import a wallet, you can do this via the follow command; 'cargo run import-wallet <private-key> <password>");
         return;
     };
-    let is_password: String = password;
 
-    println!("Wallet input detials are: {:?} - {:?}", name, is_password);
     println!("Wallet details detials are here: {:?}", wallet);
+}
+
+async fn wallet_logout() {
+    // TODO: should take string or password and ensure that the user is
+    // really the one that wants the wallet to be logged out.
+    let path = "./localCache.json";
+    if path::Path::new(path).exists() {
+        fs::remove_file(path).expect("Err: Unable to remove localCache file...");
+        println!("NOTE: Thank you for logging out. All local data is now deleted.");
+    } else {
+        println!("WARNING: No login detected, Logout may have been called already..");
+        println!("NOTE: If you need help, you can see all commands by running 'cargo run <command> -h' or to see list of commands by running 'cargo run --list'");
+        return;
+    }
 }
 
 async fn import_wallet(private: String, password: String) {
@@ -146,7 +157,7 @@ async fn import_wallet(private: String, password: String) {
             serde_json::from_slice(&file).expect("Err: Unable to read files from local cache");
         println!("reading file... : {:?}", data);
     } else {
-        let currencies = Currency {
+        let _currencies = Currency {
             name: "coin".to_string(),
             amount: 0,
         };

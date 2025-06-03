@@ -1,4 +1,3 @@
-use generic_array::{arr, sequence::GenericSequence, typenum, GenericArray};
 use hex;
 use k256::{ecdsa::SigningKey, elliptic_curve::rand_core::OsRng};
 pub use serde_derive::Deserialize;
@@ -28,7 +27,7 @@ impl UserWallet {
         // TODO: add name for native currency to then use
         // for the currency section.
         let (private_key, public_key) = Self::generate_keys();
-        let current_account = Currency {
+        let _current_account = Currency {
             name: name.clone(),
             amount: 0,
         };

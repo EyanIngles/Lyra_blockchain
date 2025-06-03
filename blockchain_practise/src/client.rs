@@ -11,6 +11,7 @@ pub enum Path {
     GetBlock,
     NewBlock,
     WalletLogin,
+    WalletLogout,
     ImportWallet,
     // help: bool, // should have a help command to show how to use or show what commands are available.
 }
@@ -24,12 +25,13 @@ pub enum Path {
 pub fn sort_client_args_direction(input: &str) -> Path {
     match input {
         "server" => Path::StartServer,
-        "get-block" => Path::GetBlock,
-        "new-block" => Path::NewBlock,
-        "create-wallet" => Path::CreateWallet,
-        "get-wallet" => Path::GetWallet,
+        "block-get" => Path::GetBlock,
+        "block-new" => Path::NewBlock,
+        "wallet-create" => Path::CreateWallet,
+        "wallet-get" => Path::GetWallet,
         "wallet-login" => Path::WalletLogin,
-        "import-wallet" => Path::ImportWallet,
+        "wallet-logout" => Path::WalletLogout,
+        "wallet-import" => Path::ImportWallet,
         &_ => todo!("Error: Unsupported argument passed"),
     }
 }
@@ -38,10 +40,10 @@ pub fn sort_client_args_direction(input: &str) -> Path {
 pub fn getting_args_correctly() {
     let (server_arg, get_block_arg, create_wallet_arg, get_wallet_arg, get_new_block) = (
         "server",
-        "get-block",
-        "create-wallet",
-        "get-wallet",
-        "new-block",
+        "block-get",
+        "wallet-create",
+        "wallet-get",
+        "block-new",
     );
     // testing to see if the server arg works.
     let server = Path::StartServer;
