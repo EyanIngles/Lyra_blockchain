@@ -16,7 +16,7 @@ impl Blockchain {
         let genesis_block = Block::new(0, "0".to_string(), "Genesis Block".to_string());
         let mut blockchain = Blockchain {
             chain_version: 1,
-            chain_name: "Mizu".to_string(),
+            chain_name: "Lyra".to_string(),
             block: vec![],
         };
         Self::push_block_onto_chain(&mut blockchain, genesis_block);
@@ -124,4 +124,3 @@ fn testing_blocks_are_being_added_to_chain() {
     let chain_length = Blockchain::get_block_length(&blockchain);
     assert_eq!(chain_length, 3);
 }
-

@@ -13,6 +13,7 @@ pub enum Path {
     WalletLogin,
     WalletLogout,
     ImportWallet,
+    Command,
     // help: bool, // should have a help command to show how to use or show what commands are available.
 }
 // pub enum Args_process { // this is to catch any errors if needed and used to also maybe as the process is waiting?
@@ -32,7 +33,8 @@ pub fn sort_client_args_direction(input: &str) -> Path {
         "wallet-login" => Path::WalletLogin,
         "wallet-logout" => Path::WalletLogout,
         "wallet-import" => Path::ImportWallet,
-        &_ => todo!("Error: Unsupported argument passed"),
+        "command" => Path::Command,
+        &_ => todo!("Err: Unsupported argument passed"),
     }
 }
 

@@ -13,6 +13,7 @@ use hex::FromHex;
 use k256::ecdsa::SigningKey;
 use k256::SecretKey;
 use network::P2PNode;
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path;
@@ -27,13 +28,27 @@ async fn main() {
 
     let args: Vec<String> = env::args().collect();
 
-    if args.len() < 2 {
-        println!("❌ Error: Missing argument (args... or_use_this_method_to_publish_data...)");
+    if args.len() <= 2 {
+        //TODO: rewrite this to point users towards command -help
+        println!("Err: Missing or incorrect arguments; Run 'cargo run command -help' ");
         return;
     }
     // sort the command out function here.
     let command_arg: &str = &args[1];
     let command = client::sort_client_args_direction(command_arg);
+
+    if &args[2] == "-help" {
+        let command_help_path = "./command_list.json";
+
+        let read_commands = fs::read_to_string(command_help_path)
+            .expect("Err: Unable to read Command-help file path.");
+
+        let command_help: HashMap<String, String> = serde_json::from_str(&read_commands)
+            .expect("Err: Unable to read sliced file for commands -help");
+
+        println!("{}", command_help[&args[1].to_string()]);
+        return;
+    }
 
     let path = "./blockchain.json";
     let blockchain = if !path::Path::new(path).exists() {
@@ -58,8 +73,8 @@ async fn main() {
         Path::GetBlock => get_block(blockchain_to_write.clone(), args[2].to_string()).await,
         Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
         Path::CreateWallet => create_wallet(args[2].clone()).await,
-        Path::WalletLogin => wallet_login().await,
-        Path::WalletLogout => wallet_logout().await,
+        Path::WalletLogin => wallet_login(args[2].clone(), args[3].clone()).await,
+        Path::WalletLogout => wallet_logout(args[2].clone(), args[3].clone()).await,
         Path::ImportWallet => import_wallet(args[2].clone(), args[3].clone()).await,
         _ => todo!(),
     };
@@ -105,7 +120,7 @@ async fn create_wallet(name: String) {
     let _new_wallet = UserWallet::generate_new_wallet(name);
 }
 
-async fn wallet_login() {
+async fn wallet_login(wallet_name: String, wallet_password: String) {
     let path = "./localCache.json";
     let wallet;
     if path::Path::new(path).exists() {
@@ -120,7 +135,7 @@ async fn wallet_login() {
     println!("Wallet details detials are here: {:?}", wallet);
 }
 
-async fn wallet_logout() {
+async fn wallet_logout(wallet_name: String, wallet_password: String) {
     // TODO: should take string or password and ensure that the user is
     // really the one that wants the wallet to be logged out.
     let path = "./localCache.json";
@@ -129,14 +144,14 @@ async fn wallet_logout() {
         println!("NOTE: Thank you for logging out. All local data is now deleted.");
     } else {
         println!("WARNING: No login detected, Logout may have been called already..");
-        println!("NOTE: If you need help, you can see all commands by running 'cargo run <command> -h' or to see list of commands by running 'cargo run --list'");
+        println!("NOTE: If you need help, you can see all commands by running 'cargo run <command> -h' or to see list of commands by running 'cargo run command-list'");
         return;
     }
 }
 
-async fn import_wallet(private: String, password: String) {
+async fn import_wallet(private_key: String, wallet_password: String) {
     // println!("Err: The provided private key has a invalid length, Please double check and try again.");
-    let key_bytes: [u8; 32] = <[u8; 32]>::from_hex(private)
+    let key_bytes: [u8; 32] = <[u8; 32]>::from_hex(private_key)
         .expect("Err: Unable to convert private key to bytes, please check your private key");
     // Convert to GenericArray
     let key_array = GenericArray::from_slice(&key_bytes);
@@ -171,7 +186,7 @@ async fn import_wallet(private: String, password: String) {
         let wallet_cache = WalletCache {
             wallet_info: user_info,
             private_key: key_bytes,
-            password,
+            password: wallet_password,
         };
         let data = serde_json::to_vec(&wallet_cache).expect("did not searlise");
         let _ = fs::write("./localCache.json", data);

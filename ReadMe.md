@@ -18,12 +18,12 @@ cargo build
 *step 2:*
 Run the following command to use to test - Genesis block will be generated if a blockchain is not currently there which will be in a file called `./blockchain.json`.
 ```bash
-cargo run new-block "block data here"
+cargo run block-new "block data here"
 ```
 or
 you can also use _ in between words if you don't want to use "String" 
 ```bash
-cargo run new-block block_data_here
+cargo run block-new block_data_here
 ```
 
 
