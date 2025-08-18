@@ -15,9 +15,9 @@ pub struct P2PNode {
 #[derive(serde_derive::Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Network {
     // this network will be used into a json file to keep track of all users and which are active to then ping.
-    id: u8,
-    is_active: bool,
-    address: String,
+    pub id: u8,
+    pub is_active: bool,
+    pub address: String,
 }
 #[derive(serde_derive::Serialize, Deserialize, Clone, Debug)]
 pub struct Cluster {
@@ -32,6 +32,14 @@ impl P2PNode {
     pub async fn start_server(&self, address: &str) {
         // i think that the sockets or IP address when a node is started should be saved somewhere and then used
         // that address to ping to see if it is connectable.
+        let mut address_to_int: String = address.replace(".", "");
+        address_to_int = address_to_int.replace(":", "");
+
+        if address_to_int.parse::<u32>().is_ok() {
+            println!("Address is valid.");
+        } else {
+            panic!("Err: Unable to convert to u32, Please try again..");
+        }
         let network_path = "./network.json";
         let _network_cluster = if !path::Path::new(network_path).exists() {
             // if file does not exist, then create new without any checks
@@ -43,16 +51,17 @@ impl P2PNode {
             };
             let mut new_cluster = Cluster { networks: vec![] };
             new_cluster.networks.push(new_network.clone());
-            let content = serde_json::to_vec(&new_cluster).expect("could not searlise");
+            let content =
+                serde_json::to_vec(&new_cluster).expect("Err: Unable to Searlise Network Cluster.");
             let _ = fs::write(network_path, content)
-                .expect("could not write new file for network.json");
+                .expect("Err: Unable to write new file to network.json");
             new_cluster
         } else {
             // else file exists, check to see if the user has an account if not create a new id
             print!("Network cluster found... \nFetching data now, Please wait....\n");
-            let file = fs::read(network_path).expect("could not find file path");
+            let file = fs::read(network_path).expect("Err: Unable to find Network file path");
             let mut network: Cluster =
-                serde_json::from_slice(&file).expect("could not Deserialize");
+                serde_json::from_slice(&file).expect("Err: Unable to Deserialise Network Cluster.");
             let mut index: usize = 0;
             let mut address_found = false;
             for item in network.networks.clone() {
@@ -60,19 +69,12 @@ impl P2PNode {
                     // will need to change the is_active status to "true";
                     let id: usize = item.id.try_into().unwrap();
                     index = id - 1;
-                    println!("\nAddress found: - your id is... {:?}", index);
                     address_found = true;
                     break;
                 }
             }
-            println!("printing here:: {:?}", network.networks[index].is_active);
-            println!("index number:: {:?}", index);
             if !network.networks[index].is_active {
                 // need this to turn a valid users is_active to true if they have been set to false so that they can be pinged.
-                println!(
-                    "before changing status ==: {:?}",
-                    network.networks[index].is_active
-                );
                 let new_cluster = P2PNode::changing_network_status(
                     network.clone(),
                     index,
@@ -80,13 +82,10 @@ impl P2PNode {
                     address.to_string().clone(),
                 )
                 .await;
-                let serde_cluster =
-                    serde_json::to_vec(&new_cluster).expect("was unable to desearlise.");
-                fs::write("./network.json", serde_cluster).expect("unable to write");
-                println!(
-                    "after changing status ==: {:?}",
-                    network.networks[index].is_active
-                );
+                let serde_cluster = serde_json::to_vec(&new_cluster)
+                    .expect("Err: Unable to Desearlise Network Cluster.");
+                fs::write("./network.json", serde_cluster)
+                    .expect("Err: Unable to write to ./network.json");
             }
             if !address_found {
                 let next_id = network.networks.len();
@@ -97,8 +96,9 @@ impl P2PNode {
                     address: address.to_string(),
                 };
                 network.networks.push(new_network);
-                let data = serde_json::to_vec(&network).expect("unable to serialize");
-                fs::write(network_path, data).expect("unable to write file");
+                let data =
+                    serde_json::to_vec(&network).expect("Err: Unable to Serialize Network Cluster");
+                fs::write(network_path, data).expect("Err: Unable to write file");
 
                 println!("❌ Address not found. Created new ID: {:?}", new_id);
             }
@@ -108,14 +108,14 @@ impl P2PNode {
 
         let listener = TcpListener::bind(address)
             .await
-            .expect("Failed to bind server");
+            .expect("Err: Failed to bind server");
         println!("✅ P2P Server listening on {}", address);
 
         loop {
             let (mut socket, _) = listener
                 .accept()
                 .await
-                .expect("Failed to accept connection");
+                .expect("Err: Failed to accept connection");
 
             tokio::spawn(async move {
                 let mut buffer = vec![0; 1024];
@@ -129,11 +129,11 @@ impl P2PNode {
                         socket
                             .write_all(response.as_bytes())
                             .await
-                            .expect("Failed to send response");
+                            .expect("Err: Failed to send response");
                     }
 
                     Err(e) => {
-                        println!("⚠️ Error reading data: {}", e);
+                        println!("Err: Reading data: {}", e);
                         return;
                     }
                 }
@@ -145,13 +145,13 @@ impl P2PNode {
             loop {
                 // get updated cluster list.
                 let cluster = P2PNode::updated_cluster();
-                let number: usize = P2PNode::random_number(cluster.clone()).try_into().unwrap(); // clone is fine if needed
+                let number: usize = P2PNode::random_number(cluster.clone()).try_into().unwrap();
                 let is_active = cluster.networks[number].is_active;
                 let address = cluster.networks[number].address.clone();
                 if is_active && caller_address != cluster.networks[number].address {
                     let connection = TcpStream::connect(&address);
                     if connection.await.is_err() {
-                        print!("unable to get a hold of address socket, changing their status to false.");
+                        print!("Err: Unable to get a hold of address socket, changing their status to 'inactive'");
                         let new_cluster = P2PNode::changing_network_status(
                             cluster.clone(),
                             number,
@@ -160,12 +160,13 @@ impl P2PNode {
                         )
                         .await;
                         let serde_cluster =
-                            serde_json::to_vec(&new_cluster).expect("was unable to desearlise.");
-                        fs::write("./network.json", serde_cluster).expect("unable to write");
+                            serde_json::to_vec(&new_cluster).expect("Err: Unable to Desearlise.");
+                        fs::write("./network.json", serde_cluster)
+                            .expect("Err: Unable to write to file.");
                     }
                 }
 
-                sleep(Duration::from_secs(4)).await; // Shortened for realism
+                sleep(Duration::from_secs(2)).await; // Shortened for realism
             }
         });
     }
@@ -178,7 +179,7 @@ impl P2PNode {
     ) -> Cluster {
         let check = cluster.networks[i].address.clone();
         if check != address {
-            panic!("ERR: Addresses do not match up - check failed....")
+            panic!("Err: Addresses do not match up - check failed....")
         }
         let network = cluster.networks.get_mut(i);
         network.unwrap().is_active = status;
@@ -198,8 +199,8 @@ impl P2PNode {
         ii
     }
     pub fn updated_cluster() -> Cluster {
-        let file = fs::read("./network.json").expect("could not find file path");
-        let network: Cluster = serde_json::from_slice(&file).expect("could not Deserialize");
+        let file = fs::read("./network.json").expect("Err: Could not find file path");
+        let network: Cluster = serde_json::from_slice(&file).expect("Err: Could not Deserialize");
         network
     }
 

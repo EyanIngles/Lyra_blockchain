@@ -1,0 +1,1 @@
+{"networks":[{"id":1,"is_active":true,"address":"127.0.1:5000"},{"id":2,"is_active":false,"address":"127.0.0.1:8080"},{"id":3,"is_active":true,"address":"127.0.1:5001"},{"id":4,"is_active":false,"address":"127.0.1:8080"}]}

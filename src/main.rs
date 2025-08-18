@@ -12,6 +12,7 @@ use generic_array::GenericArray;
 use hex::FromHex;
 use k256::ecdsa::SigningKey;
 use k256::SecretKey;
+use network::Cluster;
 use network::P2PNode;
 use std::collections::HashMap;
 use std::env;
@@ -20,7 +21,6 @@ use std::path;
 use std::sync::{Arc, Mutex};
 use tokio::test;
 use wallet::Currency;
-
 #[tokio::main]
 
 async fn main() {
@@ -29,7 +29,7 @@ async fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() <= 2 {
-        //TODO: rewrite this to point users towards command -help
+        // TODO: rewrite this to point users towards command -help
         println!("Err: Missing or incorrect arguments; Run 'cargo run command -help' ");
         return;
     }
@@ -50,12 +50,12 @@ async fn main() {
         return;
     }
 
-    let path = "./blockchain.json";
+    let path = "./local_data/blockchain/blockchain.json";
     let blockchain = if !path::Path::new(path).exists() {
         let blockchain = new_blockchain().await;
         println!("blockchain does not exist, creating a new file now..");
         let data = serde_json::to_vec(&blockchain).expect("did not searlise");
-        let _ = fs::write("./blockchain.json", data);
+        let _ = fs::write("./local_data/blockchain/blockchain.json", data);
         blockchain
     } else {
         println!("\nblockchain found and fetching data now... \nplease wait.. \n");
@@ -82,15 +82,28 @@ async fn main() {
 pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
     let mut blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
     blockchain_lock.add_block_to_chain(data.to_string());
-    println!("\n Blockchain details: {:?}", blockchain_lock);
-
     let blockchain_copy = blockchain_lock.clone();
     drop(blockchain_lock);
 
     let data_update = serde_json::to_vec(&blockchain_copy).expect("did not searlise");
-    let _ = fs::write("./blockchain.json", data_update);
+    let _ = fs::write("./local_data/blockchain/blockchain.json", data_update);
     // TODO: create a peer to peer connection with a message of the block. then that message can be
     // added to each validator? could be more efficient.
+    let network_path = "./network.json";
+    let addresses = fs::read(network_path).expect("Err: Unable to find file.");
+    let address_cluster: Cluster =
+        serde_json::from_slice(&addresses).expect("Err: Unable to retrieve data from file.");
+    for network in address_cluster.networks.clone() {
+        let value: usize = network
+            .id
+            .try_into()
+            .expect("Err: Unable to convert to usize");
+        println!(
+            "address cluster.... {:?}",
+            &address_cluster.networks[value - 1].address
+        );
+    }
+    //P2PNode::connect_to_peer(&P2PNode, address, &data);
     return;
 }
 
@@ -117,10 +130,11 @@ async fn get_block(blockchain: Arc<Mutex<Blockchain>>, arg1: String) {
 
 async fn create_wallet(name: String) {
     // TODO: create check to ensure there is a name and the name is not already in the data base to ensure not doubles.
-    let _new_wallet = UserWallet::generate_new_wallet(name);
+    let password = "test".to_string();
+    let _new_wallet = UserWallet::generate_new_wallet(name, password);
 }
 
-async fn wallet_login(wallet_name: String, wallet_password: String) {
+async fn wallet_login(_wallet_name: String, _wallet_password: String) {
     let path = "./localCache.json";
     let wallet;
     if path::Path::new(path).exists() {
@@ -135,7 +149,7 @@ async fn wallet_login(wallet_name: String, wallet_password: String) {
     println!("Wallet details detials are here: {:?}", wallet);
 }
 
-async fn wallet_logout(wallet_name: String, wallet_password: String) {
+async fn wallet_logout(_wallet_name: String, _wallet_password: String) {
     // TODO: should take string or password and ensure that the user is
     // really the one that wants the wallet to be logged out.
     let path = "./localCache.json";

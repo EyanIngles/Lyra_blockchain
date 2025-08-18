@@ -1,5 +1,4 @@
 target/
 
-blockchain.json
-network.json
-localCache.json
+local_data/
+./network.json

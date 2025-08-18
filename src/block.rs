@@ -1,35 +1,31 @@
+pub use serde_derive::Deserialize;
 use sha2::{Digest, Sha256}; // Hashing library
 use std::time::{SystemTime, UNIX_EPOCH};
-pub use serde_derive::Deserialize;
 
-
-#[derive(serde_derive::Serialize, Deserialize)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Block {
     pub index: usize,
     pub timestamp: u64,
     pub previous_hash: String,
     pub data: String,
     pub hash: String,
-    pub nonce: u64 // Used for Proof of Work
+    pub nonce: u64, // Used for Proof of Work
 }
 
 impl Block {
     // Creating new block
-    pub fn new(index: usize, 
-    previous_hash: String,
-    data_input: String) -> Self {
+    pub fn new(index: usize, previous_hash: String, data_input: String) -> Self {
         let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backawards")
-        .as_secs();
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backawards")
+            .as_secs();
         let mut block = Block {
             index,
             timestamp,
             previous_hash,
             data: data_input,
             hash: String::new(),
-            nonce: 0
+            nonce: 0,
         };
         block.mine_block(2); // POW with 2 leading zeros?
         block // returning the block
@@ -56,9 +52,5 @@ impl Block {
             }
             self.nonce += 1;
         }
-        println!(
-            "Block {} mined! Previous Hash: {} Hash: {} | Nonce: {}",
-            self.index, self.previous_hash, self.hash, self.nonce
-        );
     }
 }

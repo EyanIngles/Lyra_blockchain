@@ -28,8 +28,8 @@ impl Blockchain {
         let new_index = last_index + 1;
         let block = Block::new(new_index, previous_hash, data);
         self.block.push(block.clone());
-        println!("block info here: {:?}", block.clone());
     }
+
     fn push_block_onto_chain(blockchain: &mut Blockchain, block: Block) {
         blockchain.block.push(block);
     }
@@ -40,16 +40,19 @@ impl Blockchain {
         let hash = block.unwrap().hash.to_string();
         return (index, hash);
     }
+
     #[warn(dead_code)]
     pub fn get_index_block_previous_hash(&self, index: usize) -> String {
         let block = self.block.get(index).clone();
         let hash = block.unwrap().previous_hash.to_string();
         return hash;
     }
+
     pub fn get_block_via_index(&self, index: usize) -> Option<&Block> {
         let block = self.block.get(index).clone();
         return block;
     }
+
     #[warn(dead_code)]
     pub fn get_last_block_index_and_hash(&self) -> (usize, String) {
         let block = self.block.last().clone();
@@ -57,6 +60,7 @@ impl Blockchain {
         let hash = block.unwrap().hash.to_string();
         return (index, hash);
     }
+
     #[warn(dead_code)]
     pub fn get_any_block_index_and_hash(&self, block_number: usize) -> (usize, String) {
         let block = self.block.get(block_number).clone();
@@ -64,6 +68,7 @@ impl Blockchain {
         let hash = block.unwrap().hash.to_string();
         return (index, hash);
     }
+
     #[warn(dead_code)]
     pub fn get_any_block_hash(&self, block_number: usize) -> String {
         let block = self.block.get(block_number).clone();
@@ -81,6 +86,7 @@ impl Blockchain {
         let hash = block.unwrap().hash.to_string();
         return hash;
     }
+
     #[warn(dead_code)] //this is being used for testing.
     pub fn get_block_length(&self) -> usize {
         let block_length = self.block.len().clone();

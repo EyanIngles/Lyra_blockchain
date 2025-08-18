@@ -1,6 +1,8 @@
+use aes_gcm::aead::OsRng;
 use hex;
-use k256::{ecdsa::SigningKey, elliptic_curve::rand_core::OsRng};
-pub use serde_derive::Deserialize;
+use k256::ecdsa::SigningKey;
+use serde_derive::Deserialize;
+use std::fs;
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Currency {
@@ -23,9 +25,10 @@ pub struct WalletCache {
 }
 
 impl UserWallet {
-    pub fn generate_new_wallet(name: String) -> Self {
+    pub fn generate_new_wallet(name: String, password: String) -> UserWallet {
         // TODO: add name for native currency to then use
-        // for the currency section.
+        // for the currency section. and create a checker list to ensure that the name does
+        // not exist.
         let (private_key, public_key) = Self::generate_keys();
         let _current_account = Currency {
             name: name.clone(),
@@ -39,7 +42,15 @@ impl UserWallet {
         println!("New Wallet Users: {:?}", wallet.name);
         println!("Private Key: {:?}", private_key);
         println!("Public Key: {:?}", public_key);
-        wallet
+
+        // save keys to a pem file created.
+        let private_file_name = name.clone() + "private_key.pem";
+        let public_file_name = name.clone() + "public_key.pem";
+        let password_key = password.into_bytes();
+        println!("{:?}", password_key);
+        let _public_file = fs::write(public_file_name, public_key.as_bytes());
+        let _privale_file = fs::write(private_file_name, private_key.as_bytes());
+        return wallet;
     }
 
     fn generate_keys() -> (String, String) {
@@ -58,8 +69,8 @@ impl UserWallet {
 
 #[test]
 fn test_wallet_generating() {
-    let wallet1 = UserWallet::generate_new_wallet("wallet1".to_string());
-    let wallet2 = UserWallet::generate_new_wallet("wallet2".to_string());
+    let wallet1 = UserWallet::generate_new_wallet("wallet1".to_string(), "password1".to_string());
+    let wallet2 = UserWallet::generate_new_wallet("wallet2".to_string(), "password2".to_string());
 
     assert_ne!(wallet1, wallet2);
 }
