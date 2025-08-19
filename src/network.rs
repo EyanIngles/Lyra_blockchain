@@ -29,6 +29,26 @@ impl P2PNode {
         P2PNode { _blockchain }
     }
 
+    pub async fn creating_server(&self, address: &str) {
+        let network_path = "./network.json";
+        if path::Path::new(network_path).exists() {
+            // if path doesnt exist, then panic.
+            panic!("Err: Network file already exist, Panicing now...");
+        }
+        print!("\nno server found, creating new cluster.... \nplease wait...\n");
+        let new_network = Network {
+            id: 0,
+            is_active: true,
+            address: address.to_string(),
+        };
+        let mut new_cluster = Cluster { networks: vec![] };
+        new_cluster.networks.push(new_network.clone());
+        let content =
+            serde_json::to_vec(&new_cluster).expect("Err: Unable to Searlise Network Cluster.");
+        let _ = fs::write(network_path, content)
+            .expect("Err: Unable to write new file to network.json");
+    }
+
     pub async fn start_server(&self, address: &str) {
         // i think that the sockets or IP address when a node is started should be saved somewhere and then used
         // that address to ping to see if it is connectable.
@@ -41,70 +61,55 @@ impl P2PNode {
             panic!("Err: Unable to convert to u32, Please try again..");
         }
         let network_path = "./network.json";
-        let _network_cluster = if !path::Path::new(network_path).exists() {
-            // if file does not exist, then create new without any checks
-            print!("\nno server found, creeating new cluster.... \nplease wait...\n");
+        // if file does not exist, then create new without any checks
+        // else file exists, check to see if the user has an account if not create a new id
+        print!("Network cluster found... \nFetching data now, Please wait....\n");
+        let file = fs::read(network_path).expect("Err: Unable to find Network file path");
+        let mut network: Cluster =
+            serde_json::from_slice(&file).expect("Err: Unable to Deserialise Network Cluster.");
+        let mut index: usize = 0;
+        let mut address_found = false;
+        for item in network.networks.clone() {
+            if item.address == address {
+                // will need to change the is_active status to "true";
+                let id: usize = item.id.try_into().unwrap();
+                index = id;
+                address_found = true;
+                break;
+            }
+        }
+
+        if address_found {
+            // need this to turn a valid users is_active to true if they have been set to false so that they can be pinged.
+            let new_cluster = P2PNode::changing_network_status(
+                network.clone(),
+                index,
+                true,
+                address.to_string().clone(),
+            )
+            .await;
+            let serde_cluster = serde_json::to_vec(&new_cluster)
+                .expect("Err: Unable to Desearlise Network Cluster.");
+            fs::write("./network.json", serde_cluster)
+                .expect("Err: Unable to write to ./network.json");
+        }
+        if !address_found {
+            let next_id = network.networks.len();
+            let new_id: u8 = (next_id).try_into().unwrap();
             let new_network = Network {
-                id: 1,
+                id: new_id,
                 is_active: true,
                 address: address.to_string(),
             };
-            let mut new_cluster = Cluster { networks: vec![] };
-            new_cluster.networks.push(new_network.clone());
-            let content =
-                serde_json::to_vec(&new_cluster).expect("Err: Unable to Searlise Network Cluster.");
-            let _ = fs::write(network_path, content)
-                .expect("Err: Unable to write new file to network.json");
-            new_cluster
-        } else {
-            // else file exists, check to see if the user has an account if not create a new id
-            print!("Network cluster found... \nFetching data now, Please wait....\n");
-            let file = fs::read(network_path).expect("Err: Unable to find Network file path");
-            let mut network: Cluster =
-                serde_json::from_slice(&file).expect("Err: Unable to Deserialise Network Cluster.");
-            let mut index: usize = 0;
-            let mut address_found = false;
-            for item in network.networks.clone() {
-                if item.address == address {
-                    // will need to change the is_active status to "true";
-                    let id: usize = item.id.try_into().unwrap();
-                    index = id - 1;
-                    address_found = true;
-                    break;
-                }
-            }
-            if !network.networks[index].is_active {
-                // need this to turn a valid users is_active to true if they have been set to false so that they can be pinged.
-                let new_cluster = P2PNode::changing_network_status(
-                    network.clone(),
-                    index,
-                    true,
-                    address.to_string().clone(),
-                )
-                .await;
-                let serde_cluster = serde_json::to_vec(&new_cluster)
-                    .expect("Err: Unable to Desearlise Network Cluster.");
-                fs::write("./network.json", serde_cluster)
-                    .expect("Err: Unable to write to ./network.json");
-            }
-            if !address_found {
-                let next_id = network.networks.len();
-                let new_id: u8 = (next_id + 1).try_into().unwrap();
-                let new_network = Network {
-                    id: new_id,
-                    is_active: true,
-                    address: address.to_string(),
-                };
-                network.networks.push(new_network);
-                let data =
-                    serde_json::to_vec(&network).expect("Err: Unable to Serialize Network Cluster");
-                fs::write(network_path, data).expect("Err: Unable to write file");
+            network.networks.push(new_network);
+            let data =
+                serde_json::to_vec(&network).expect("Err: Unable to Serialize Network Cluster");
+            fs::write(network_path, data).expect("Err: Unable to write file");
 
-                println!("❌ Address not found. Created new ID: {:?}", new_id);
-            }
-            P2PNode::monitor_network_cluster(address.to_string().clone()).await; // pinging other validators
-            network
-        };
+            println!("❌ Address not found. Created new ID: {:?}", new_id);
+        }
+        P2PNode::monitor_network_cluster(address.to_string().clone()).await;
+        // pinging other validators
 
         let listener = TcpListener::bind(address)
             .await

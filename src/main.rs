@@ -114,9 +114,15 @@ async fn new_blockchain() -> Blockchain {
 
 async fn start_server(p2p_node: &P2PNode, address: String) {
     if address == "default" || address == "" {
+        if !path::Path::new("./network.json").exists() {
+            p2p_node.creating_server("127.0.0.1:8080").await
+        }
         p2p_node.start_server("127.0.0.1:8080").await;
         //TODO: will want to ping to see if socket is clear and then run that socket address if clear.
     } else {
+        if !path::Path::new("./network.json").exists() {
+            p2p_node.creating_server(&address).await
+        }
         p2p_node.start_server(&address).await; //TODO will want to ping to see if socket is clear and then run that socket address if clear.
     }
 }
