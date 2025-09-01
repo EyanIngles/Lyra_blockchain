@@ -12,6 +12,7 @@ use tokio::{spawn, time::sleep};
 pub struct P2PNode {
     pub _blockchain: Arc<Mutex<Blockchain>>,
 }
+
 #[derive(serde_derive::Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Network {
     // this network will be used into a json file to keep track of all users and which are active to then ping.
@@ -19,6 +20,7 @@ pub struct Network {
     pub is_active: bool,
     pub address: String,
 }
+
 #[derive(serde_derive::Serialize, Deserialize, Clone, Debug)]
 pub struct Cluster {
     pub networks: Vec<Network>,
@@ -209,7 +211,7 @@ impl P2PNode {
         network
     }
 
-    pub async fn connect_to_peer(&self, address: &str, data: String) {
+    pub async fn connect_to_peer(&self, address: &str, data: &str) {
         match TcpStream::connect(address).await {
             Ok(mut stream) => {
                 println!("🔗 Connected to peer at {}", address);

@@ -1,6 +1,7 @@
 use aes_gcm::aead::OsRng;
 use hex;
 use k256::ecdsa::SigningKey;
+use scanpw::scanpw;
 use serde_derive::Deserialize;
 use std::fs;
 
@@ -25,10 +26,11 @@ pub struct WalletCache {
 }
 
 impl UserWallet {
-    pub fn generate_new_wallet(name: String, password: String) -> UserWallet {
+    pub fn generate_new_wallet(name: String) -> UserWallet {
         // TODO: add name for native currency to then use
         // for the currency section. and create a checker list to ensure that the name does
         // not exist.
+        let password = scanpw!("Enter Password: "); // password may not be needed here....
         let (private_key, public_key) = Self::generate_keys();
         let _current_account = Currency {
             name: name.clone(),
@@ -42,14 +44,10 @@ impl UserWallet {
         println!("New Wallet Users: {:?}", wallet.name);
         println!("Private Key: {:?}", private_key);
         println!("Public Key: {:?}", public_key);
-
-        // save keys to a pem file created.
-        let private_file_name = name.clone() + "private_key.pem";
-        let public_file_name = name.clone() + "public_key.pem";
         let password_key = password.into_bytes();
-        println!("{:?}", password_key);
-        let _public_file = fs::write(public_file_name, public_key.as_bytes());
-        let _privale_file = fs::write(private_file_name, private_key.as_bytes());
+        println!("password encrpypted as bytes ;) {:?}", password_key);
+        //TODO: will need to add to the list of current users. this will be used for searching up
+        //other users via their name or public address.
         return wallet;
     }
 
@@ -63,6 +61,17 @@ impl UserWallet {
         (private_key_hex, public_key_hex)
     }
 
+    // TODO: let this be used to encrypt the passwords before being saved and then saved as a local
+    // pem file that is encrypted and another function to descrypt it.
+    fn encrypt_local_wallet() {
+        // TODO: save keys to a pem file created. Should this be the process of the login wallet?
+        //let private_file_name = name.clone() + "private_key.pem";
+        //let public_file_name = name.clone() + "public_key.pem";
+        //let password_key = password.into_bytes();
+        //println!("{:?}", password_key);
+        //let _public_file = fs::write(public_file_name, public_key.as_bytes());
+        //let _privale_file = fs::write(private_file_name, private_key.as_bytes());
+    }
     //TODO: pub fn transfer_currency(&mut self, ) // create function to transfer token and amount
     //to another address, if address doesnt exist on chain, bounce back or abort.
 }

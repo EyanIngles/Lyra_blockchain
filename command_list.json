@@ -1,10 +1,10 @@
 {
-  "wallet-create": "description; wallet-create",
-  "wallet-login": "description; wallet-login",
-  "wallet-logout": "description; wallet-logout",
-  "block-get": "description; block-get",
-  "block-new": "description; block-new",
-  "command": "description; command list and help here.",
-  "command-here-1": "description; nothing yet 1",
-  "command-here-2": "description; nothing yet 2"
+  "wallet-create": "Description; wallet-create",
+  "wallet-login": "Description; wallet-login",
+  "wallet-logout": "Description; wallet-logout",
+  "block-get": "Description; block-get",
+  "block-new": "Description; block-new",
+  "command": "Commands: \nwallet-create\nwallet-login\nwallet-logout\nblock-get\nblock-new",
+  "command-here-1": "Description; nothing yet: ID-1",
+  "command-here-2": "Description; nothing yet: ID-2"
 }

@@ -17,3 +17,4 @@ generic-array = "0.14" # only if needed directly
 argon2 = "0.5.3"
 rand_core = "0.9.3"
 aes-gcm = "0.10.3"
+scanpw = "1.0.0"

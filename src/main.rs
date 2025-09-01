@@ -69,17 +69,19 @@ async fn main() {
 
     // create a match to then point it the a function.
     match command {
-        Path::NewBlock => create_new_block(blockchain_to_write.clone(), &args[2]),
+        Path::NewBlock => create_new_block(&p2p_node, blockchain_to_write.clone(), &args[2]).await,
         Path::GetBlock => get_block(blockchain_to_write.clone(), args[2].to_string()).await,
         Path::StartServer => start_server(&p2p_node, args[2].to_string()).await,
         Path::CreateWallet => create_wallet(args[2].clone()).await,
         Path::WalletLogin => wallet_login(args[2].clone(), args[3].clone()).await,
         Path::WalletLogout => wallet_logout(args[2].clone(), args[3].clone()).await,
-        Path::ImportWallet => import_wallet(args[2].clone(), args[3].clone()).await,
+        Path::ImportWallet => {
+            import_wallet(args[2].clone(), args[3].clone(), args[4].clone()).await
+        }
         _ => todo!(),
     };
 }
-pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
+async fn create_new_block(p2p_node: &P2PNode, blockchain: Arc<Mutex<Blockchain>>, data: &str) {
     let mut blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
     blockchain_lock.add_block_to_chain(data.to_string());
     let blockchain_copy = blockchain_lock.clone();
@@ -93,17 +95,12 @@ pub fn create_new_block(blockchain: Arc<Mutex<Blockchain>>, data: &str) {
     let addresses = fs::read(network_path).expect("Err: Unable to find file.");
     let address_cluster: Cluster =
         serde_json::from_slice(&addresses).expect("Err: Unable to retrieve data from file.");
+    //
+
     for network in address_cluster.networks.clone() {
-        let value: usize = network
-            .id
-            .try_into()
-            .expect("Err: Unable to convert to usize");
-        println!(
-            "address cluster.... {:?}",
-            &address_cluster.networks[value - 1].address
-        );
+        println!("going through the networks now...");
+        P2PNode::connect_to_peer(&p2p_node, network.address.as_str(), &data).await;
     }
-    //P2PNode::connect_to_peer(&P2PNode, address, &data);
     return;
 }
 
@@ -136,8 +133,7 @@ async fn get_block(blockchain: Arc<Mutex<Blockchain>>, arg1: String) {
 
 async fn create_wallet(name: String) {
     // TODO: create check to ensure there is a name and the name is not already in the data base to ensure not doubles.
-    let password = "test".to_string();
-    let _new_wallet = UserWallet::generate_new_wallet(name, password);
+    let _new_wallet = UserWallet::generate_new_wallet(name);
 }
 
 async fn wallet_login(_wallet_name: String, _wallet_password: String) {
@@ -146,7 +142,13 @@ async fn wallet_login(_wallet_name: String, _wallet_password: String) {
     if path::Path::new(path).exists() {
         let file = fs::read(path).expect("Err: Unable to open localCache file...");
         let wallet_cache: WalletCache = serde_json::from_slice(&file).expect("Err:");
-        wallet = wallet_cache
+        if &_wallet_password != &wallet_cache.password {
+            panic!("Err: Password input incorrect to use this wallet.");
+        }
+        if &_wallet_name != &wallet_cache.wallet_info.name {
+            panic!("Err: Wallet with that name does not exist.");
+        }
+        wallet = wallet_cache;
     } else {
         println!("Err: you must import a wallet, you can do this via the follow command; 'cargo run import-wallet <private-key> <password>");
         return;
@@ -169,7 +171,7 @@ async fn wallet_logout(_wallet_name: String, _wallet_password: String) {
     }
 }
 
-async fn import_wallet(private_key: String, wallet_password: String) {
+async fn import_wallet(wallet_name: String, private_key: String, wallet_password: String) {
     // println!("Err: The provided private key has a invalid length, Please double check and try again.");
     let key_bytes: [u8; 32] = <[u8; 32]>::from_hex(private_key)
         .expect("Err: Unable to convert private key to bytes, please check your private key");
@@ -190,14 +192,18 @@ async fn import_wallet(private_key: String, wallet_password: String) {
         let file = fs::read(path).expect("Err: Unable to read file");
         let data: WalletCache =
             serde_json::from_slice(&file).expect("Err: Unable to read files from local cache");
-        println!("reading file... : {:?}", data);
+        println!(
+            "reading file... : {:?}\nhave not implemented writing of new yet",
+            data
+        );
+        //TODO: either rewrite over or create another section and write a new wallet on there.
     } else {
         let _currencies = Currency {
             name: "coin".to_string(),
             amount: 0,
         };
         let user_info = UserWallet {
-            name: "Eyan".to_string(), // hardcoded for the moment.
+            name: wallet_name, // hardcoded for the moment.
             address: public_key_hex,
             currency_accounts: vec![], // TODO: will need to make it so we read from the blockchain and
                                        // fetch these details from the public key generation.
