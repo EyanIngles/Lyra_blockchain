@@ -1,4 +1,5 @@
 use aes_gcm::aead::OsRng;
+use bip39::{Language, Mnemonic};
 use hex;
 use k256::ecdsa::SigningKey;
 use scanpw::scanpw;
@@ -44,11 +45,33 @@ impl UserWallet {
         println!("New Wallet Users: {:?}", wallet.name);
         println!("Private Key: {:?}", private_key);
         println!("Public Key: {:?}", public_key);
+        let phrase = Self::generate_phrase(private_key.clone());
+        println!("Your secret phrase is: {:?}", phrase);
         let password_key = password.into_bytes();
         println!("password encrpypted as bytes ;) {:?}", password_key);
         //TODO: will need to add to the list of current users. this will be used for searching up
         //other users via their name or public address.
         return wallet;
+    }
+
+    fn generate_phrase(key: String) -> String {
+        let key_bytes = hex::decode(key).expect("Err: Invalid Hex Input");
+        let byte: [u8; 32] = key_bytes
+            .try_into()
+            .expect("Err: Unable to change format of bytes");
+        let s =
+            Mnemonic::from_entropy(&byte).expect("Err: Unable to convert bytes to Mnemonic type");
+        let s_phrase = Mnemonic::to_string(&s);
+        println!("phrase: {:?}", s_phrase);
+        let ss = Mnemonic::parse(&s_phrase).expect("Err: Unable to convert back to Mnemonic");
+        println!("ss here: {:?}", ss);
+        let sss = Mnemonic::to_entropy(&ss);
+        let private_key_again_1: Vec<u8> = sss
+            .try_into()
+            .expect("Err: Unable to convert back to vec form.");
+        let private_key_again_2 = hex::encode(&private_key_again_1);
+        println!("Private key again here: {:?}", private_key_again_2);
+        return s_phrase;
     }
 
     fn generate_keys() -> (String, String) {
@@ -78,8 +101,8 @@ impl UserWallet {
 
 #[test]
 fn test_wallet_generating() {
-    let wallet1 = UserWallet::generate_new_wallet("wallet1".to_string(), "password1".to_string());
-    let wallet2 = UserWallet::generate_new_wallet("wallet2".to_string(), "password2".to_string());
+    let wallet1 = UserWallet::generate_new_wallet("wallet1".to_string());
+    let wallet2 = UserWallet::generate_new_wallet("wallet2".to_string());
 
     assert_ne!(wallet1, wallet2);
 }

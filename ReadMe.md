@@ -1,12 +1,15 @@
 # Blockchain Concept::
 
-## what are we doing different?
-simply experimenting with different types and idea's on how blockchains can work in different ways.
-let's break this down a little.
+## Lyra Blockchain - How to start.
+### Below we will go through a quick set up on beginning to use this blockchain, lets start with getting you a `wallet`.
 
-### Wallet
-users are able to get a wallet, to keep things simple, we will be using an address which is in type of string, currency, amount, name so people are able to search up wallets via name instead of address, the address is what will determine whether it is the correct name or not.
-
+# Creating a `wallet`
+*step 1:*
+Good thing about rust is that whether you have pre-built cargo or not, it wont matter because it will compile when required, so lets go straight and call the function we want to use, Type in your terminal the following command once you have directed yourself to the correct file.
+```bash
+cargo run wallet-create <name>
+```
+Currently we do NOT have secret phases set up to save with your new wallet once created - TODO:
 
 # How to use this blockchain?
 *step 1:*
