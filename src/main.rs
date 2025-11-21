@@ -4,6 +4,8 @@ mod client;
 mod network;
 mod wallet;
 mod transactions;
+mod token;
+mod lyst746F;
 
 use crate::wallet::UserWallet;
 use crate::wallet::WalletCache;
