@@ -1,7 +1,8 @@
 # Blockchain Concept::
 
 ## Lyra Blockchain - How to start.
-### Below we will go through a quick set up on beginning to use this blockchain, lets start with getting you a `wallet`.
+
+# Below we will go through a quick set up on beginning to use this blockchain, lets start with getting you a `wallet`.
 
 # Creating a `wallet`
 *step 1:*

@@ -1,10 +1,9 @@
 use aes_gcm::aead::OsRng;
-use bip39::{Language, Mnemonic};
+use bip39::Mnemonic;
 use hex;
 use k256::ecdsa::SigningKey;
 use scanpw::scanpw;
 use serde_derive::Deserialize;
-use std::fs;
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Currency {
@@ -13,9 +12,15 @@ pub struct Currency {
 }
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
+struct Address {
+    uid: u64, //generate a unique ID that is one of a kind.
+    public_key: String // general publickey for tracking when a transaction is occured.
+}
+
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct UserWallet {
     pub name: String,
-    pub address: String,
+    pub address: String, // line 222 and 47 to be fixed before shifting to <Address>
     pub currency_accounts: Vec<Currency>,
 }
 

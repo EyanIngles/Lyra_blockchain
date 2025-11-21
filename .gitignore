@@ -1,4 +1,7 @@
 target/
 
 local_data/
-./network.json
+dev_thoughts.md
+todo_list.md
+./localCache.json
+./network.json	

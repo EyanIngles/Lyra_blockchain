@@ -3,6 +3,7 @@ mod blockchain;
 mod client;
 mod network;
 mod wallet;
+mod transactions;
 
 use crate::wallet::UserWallet;
 use crate::wallet::WalletCache;
@@ -99,7 +100,11 @@ async fn create_new_block(p2p_node: &P2PNode, blockchain: Arc<Mutex<Blockchain>>
 
     for network in address_cluster.networks.clone() {
         println!("going through the networks now...");
-        P2PNode::connect_to_peer(&p2p_node, network.address.as_str(), &data).await;
+        if network.is_active == true {
+            P2PNode::connect_to_peer(&p2p_node, network.address.as_str(), &data).await;
+        } else {
+            println!("network is not active: {:?}", network);
+        }
     }
     return;
 }
