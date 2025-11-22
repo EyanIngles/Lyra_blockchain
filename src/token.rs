@@ -20,7 +20,11 @@ impl Token {
         };
         return token;
     }
+    
+    fn token_standard(token: TokenStd) -> bool {    // Check if token being created is within standard or not which will pass back a boolean value.
+           return TokenStd::is_following_token_std(token);
 
+    }
 
 
 

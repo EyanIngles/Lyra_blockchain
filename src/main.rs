@@ -6,6 +6,7 @@ mod wallet;
 mod transactions;
 mod token;
 mod lyst746F;
+mod luid;
 
 use crate::wallet::UserWallet;
 use crate::wallet::WalletCache;
