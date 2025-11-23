@@ -1,10 +1,10 @@
 [package]
-name = "Mizu_Blockchain"
+name = "Lyra_Blockchain"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] } ## for node listening and sending
+tokio = { version = "1", features = ["full"] } 
 sha2 = "0.10.8"
 rand = "0.8"
 serde = "1.0.219"
@@ -13,7 +13,7 @@ k256 = "0.13.4"
 hex = "0.4.3"
 time = "0.3.39"
 serde_derive = "1.0.219"
-generic-array = "0.14" # only if needed directly
+generic-array = "0.14" 	
 argon2 = "0.5.3"
 rand_core = "0.9.3"
 aes-gcm = "0.10.3"

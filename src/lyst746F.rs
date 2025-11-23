@@ -17,7 +17,7 @@ impl TokenStd {
 
     pub fn new_token_std(id: String) -> TokenStd {
         let token_standard = TokenStd {
-            id: "id".to_string(),
+            id: id,
             is_std: true,
             has_total_supply: true,
             has_max_supply: true,
@@ -40,10 +40,12 @@ impl TokenStd {
         } else {
             return false
         }
-
     }
 
-
+    pub fn get_has_maxsup(tokenStd: &TokenStd) -> bool {
+        return tokenStd.has_total_supply;
+    
+    }
 
 
 
