@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "Mizu_Blockchain"
+name = "Lyra_Blockchain"
 version = "0.1.0"
 dependencies = [
  "aes-gcm",

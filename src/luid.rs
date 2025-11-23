@@ -27,9 +27,8 @@ impl LUID {
     }
 
 
-
-
 }
+
 
 #[test]
 pub fn test_random_generator() {
