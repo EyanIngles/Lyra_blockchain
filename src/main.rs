@@ -8,8 +8,8 @@ mod token;
 mod lyst746F;
 mod luid;
 
-use crate::wallet::UserWallet;
-use crate::wallet::WalletCache;
+use crate::wallet::{UserWallet, WalletCache, Address};
+use crate::token::TokenList;
 use blockchain::Blockchain;
 use client::Path;
 use generic_array::GenericArray;
@@ -24,7 +24,6 @@ use std::fs;
 use std::path;
 use std::sync::{Arc, Mutex};
 use tokio::test;
-use wallet::Currency;
 #[tokio::main]
 
 async fn main() {
@@ -192,6 +191,7 @@ async fn import_wallet(wallet_name: String, private_key: String, wallet_password
 
     let public_key_hex = hex::encode(public_key.to_encoded_point(false).as_bytes());
     println!("here is your public key: {:?}", public_key_hex);
+
     // TODO: check to see if there is a path file and if not, create and import wallet, store
     // one wallet at a time for the time being.
     let path = "./localCache.json";
@@ -205,15 +205,11 @@ async fn import_wallet(wallet_name: String, private_key: String, wallet_password
             data
         );
         //TODO: either rewrite over or create another section and write a new wallet on there.
-    } else {
-        let _currencies = Currency {
-            name: "coin".to_string(),
-            amount: 0,
-        };
+    } else { 
         let user_info = UserWallet {
             name: wallet_name, // hardcoded for the moment.
-            address: public_key_hex,
-            currency_accounts: vec![], // TODO: will need to make it so we read from the blockchain and
+            address: Address { public_key: public_key_hex },
+            currency_accounts: TokenList::new(), // TODO: will need to make it so we read from the blockchain and
                                        // fetch these details from the public key generation.
         };
 
