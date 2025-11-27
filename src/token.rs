@@ -1,19 +1,24 @@
-
+pub use serde_derive::Deserialize;
 use crate::lyst746F::TokenStd;
 
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)] 
 pub struct Token {
-    id: String, //this will need to be a UID <to be build> - should also create a standard that
-                //must be followed.
+    id: String, //this will need to be a UID <to be build> - should also create a standard that must be followed.
     name: String,
-    owner: String,
+    owner: String, //this will need to be changed to Address.
     std: TokenStd,
     max_supply: u64, 
-    
 }
+
+#[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct TokenList {
+    pub tokens: Vec<Token>
+}
+
 
 impl Token {
 
-    pub fn new_token() -> Token {
+    pub fn new() -> Token {
         let standard = TokenStd::new_token_std("Test_ID".to_string());
         let token = Token {
             id: "Practise_token".to_string(),
@@ -41,11 +46,23 @@ impl Token {
     }
 }
 
+impl TokenList {
+
+    pub fn new() -> TokenList {
+        let tklst = TokenList {
+            tokens: vec![]
+        };
+        return tklst
+    }
+
+}
+
+
 
 #[test]
 pub fn test_new_token_is_standard_approved() { //This is a temporary test - more logic required
    let standard_approved = TokenStd::new_token_std("Test_ID".to_string());
-   let new_token = Token::new_token();
+   let new_token = Token::new();
 
    assert_eq!(new_token.std, standard_approved);
 }
