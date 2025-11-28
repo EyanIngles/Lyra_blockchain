@@ -7,7 +7,8 @@ pub struct Token {
     name: String,
     owner: String, //this will need to be changed to Address.
     std: TokenStd,
-    max_supply: u64, 
+    total_supply: u64, // should total supply potentially be inside the <TokenStd>?
+    balance: u64
 }
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -24,8 +25,9 @@ impl Token {
             id: "Practise_token".to_string(),
             owner: "Practise_owner".to_string(), //string for now until address is implemented.
             name: "Practise_name".to_string(),
-            max_supply: 100000000, //this value is just a random value and is not finalised.
+            total_supply: 100000000, //this value is just a random value and is not finalised.
             std: standard,
+            balance: 0,
         };
         return token;
     }
@@ -37,11 +39,13 @@ impl Token {
     
     pub fn mint_tokens(token: &mut Token, mint_amount: u64, owner: String) {//owner is passing a string currently until addresses are correctly implemented.
         // need to check owner against the wallet doing the transaction.
-        if TokenStd::get_has_maxsup(&token.std) == false {
-            token.max_supply = token.max_supply + mint_amount;
+        if TokenStd::get_has_totsup(&token.std) == false {
+            token.total_supply = token.total_supply + mint_amount;
             // will require additional checks such as if this is the owner of the token and so on.
         } else {
-            panic!("Err: Unable to mint due to Token is within required standard")
+            panic!("Err: Unable to mint due to Token is within required standard") //this wording
+                                                                                   //needs to be
+                                                                                   //updated.
         }
     }
 }
