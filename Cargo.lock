@@ -10,6 +10,7 @@ dependencies = [
  "argon2",
  "bip39",
  "bytes",
+ "chrono",
  "dirs",
  "epoch",
  "generic-array",
