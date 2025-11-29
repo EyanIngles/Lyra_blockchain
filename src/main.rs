@@ -30,6 +30,11 @@ async fn main() {
     // TODO: need to ping and ensure that the server is running, this will then route the data and maybe have the server send the signal of the blockchain so that the data can be all sent and stored on that blockchain, this method, we are creating a new blockchain every
 
     let args: Vec<String> = env::args().collect();
+    
+
+    /// testing here::
+    let time_u64 = luid::LUID::new();
+    println!("here is the function being called value -> {:?}", time_u64);
 
     if args.len() <= 2 {
         // TODO: rewrite this to point users towards command -help
