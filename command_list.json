@@ -1,10 +1,11 @@
 {
-  "wallet-create": "Description; wallet-create",
-  "wallet-login": "Description; wallet-login",
-  "wallet-logout": "Description; wallet-logout",
-  "block-get": "Description; block-get",
-  "block-new": "Description; block-new",
-  "command": "Commands: \nwallet-create\nwallet-login\nwallet-logout\nblock-get\nblock-new",
+  "wallet-create": "Description: This functions run a command that will create the caller a new wallet, the caller will be prompted to enter in a password in which will enccrypt the callers local wallet details.\nUsage: wallet-create <String-name-value>\nExample: cargo run wallet-create 'Lyra'",
+  "wallet-login": "Description: Login to your imported wallet for the use of transactions and function calling on the Lyra blockchain. \nUsage: cargo run wallet-login <import-name> !<password>! currently needing to use an extra arg to pass through the password, this is to be updated!\nExample: cargo run wallet-login 'Lyra' 'Lyra-password'",
+  "wallet-import": "Description: This function is designed for a caller to import their wallet via secret key in Byte form (coming soon is to import via 24 words)\nUsage: cargo run cargo run wallet-import <wallet-name> <private-key> <local-password> \nExample: cargo run wallet-import Lyra 2c378732f58e28eed21fde33aa4d3e245db209df7d8ab5a0ceaa Lyra-password",
+  "wallet-logout": "Description: The wallet-logout function is used to delete the local stored files relating to the wallet that was imported and password, this function targets the one wallet that has been imported locally. \nUsage: cargo run wallet-logout <wallet-name> <wallet-password> \nExample: cargo run wallet-logout Lyra Lyra-password",
+  "block-get": "Description: Get block within the blockchain via the index value, this will retreive all the block details that has been called for. \nUsage: cargo run block-get <block-index> \nExample: cargo run block-get 0",
+  "block-new": "Description: This function is to create a new block, mainly for testing purposes which help with understanding the process of a block being created with the use of data. \nUsage: Cargo run block-new <data> \nExample: cargo run block-new 'exmaple data is here'",
+  "command": "Commands: \nwallet-create\nwallet-login\nwallet-logout\nblock-get\nblock-new\n\nRun command with '-help' at the end for more information which includes a detailed description, usage and use case example.",
   "command-here-1": "Description; nothing yet: ID-1",
   "command-here-2": "Description; nothing yet: ID-2"
 }

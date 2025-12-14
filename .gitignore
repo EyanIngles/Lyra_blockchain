@@ -4,4 +4,5 @@ local_data/
 dev_thoughts.md
 todo_list.md
 ./localCache.json
+localCache.json
 ./network.json	
