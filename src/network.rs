@@ -47,8 +47,7 @@ impl P2PNode {
         new_cluster.networks.push(new_network.clone());
         let content =
             serde_json::to_vec(&new_cluster).expect("Err: Unable to Searlise Network Cluster.");
-        let _ = fs::write(network_path, content)
-            .expect("Err: Unable to write new file to network.json");
+        fs::write(network_path, content).expect("Err: Unable to write new file to network.json");
     }
 
     pub async fn start_server(&self, address: &str) {
@@ -74,7 +73,7 @@ impl P2PNode {
         for item in network.networks.clone() {
             if item.address == address {
                 // will need to change the is_active status to "true";
-                let id: usize = item.id.try_into().unwrap();
+                let id: usize = item.id.into();
                 index = id;
                 address_found = true;
                 break;
@@ -141,7 +140,6 @@ impl P2PNode {
 
                     Err(e) => {
                         println!("Err: Reading data: {}", e);
-                        return;
                     }
                 }
             });
@@ -158,7 +156,9 @@ impl P2PNode {
                 if is_active && caller_address != cluster.networks[number].address {
                     let connection = TcpStream::connect(&address);
                     if connection.await.is_err() {
-                        print!("Err: Unable to get a hold of address socket, changing their status to 'inactive'");
+                        print!(
+                            "Err: Unable to get a hold of address socket, changing their status to 'inactive'"
+                        );
                         let new_cluster = P2PNode::changing_network_status(
                             cluster.clone(),
                             number,
