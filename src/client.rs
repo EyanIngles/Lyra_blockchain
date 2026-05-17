@@ -3,6 +3,9 @@
 // enum list to give us a selection of what to do such as get_block enum value that if the args being parsed in make this the path to take,
 // we will set that enum to true.
 
+use std::collections::HashMap;
+use std::fs;
+
 #[derive(PartialEq, Debug)]
 pub enum Path {
     StartServer,
@@ -36,6 +39,14 @@ pub fn sort_client_args_direction(input: &str) -> Path {
         "command" => Path::Command,
         &_ => todo!("Err: Unsupported argument passed"),
     }
+}
+
+pub fn get_help(cmd: String) -> Result<String, serde_json::Error> {
+    let path = "./command_list.json";
+    let read_path = fs::read_to_string(path).expect("Err: Unable to read Command-help file path.");
+    let command_help: HashMap<String, String> = serde_json::from_str(&read_path)
+        .expect("Err: Unable to read sliced file for commands -help");
+    Ok(command_help[&cmd].clone())
 }
 
 #[test] // TODO: update test to ensure all paths are on here.

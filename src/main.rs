@@ -1,24 +1,23 @@
 mod block; // importing the modules created.
 mod blockchain;
 mod client;
-mod network;
-mod wallet;
-mod transactions;
-mod token;
-mod lyst746F;
 mod luid;
+mod lyst746_f;
+mod network;
+mod token;
+mod transactions;
+mod wallet;
 
-use crate::wallet::{UserWallet, WalletCache, Address};
 use crate::token::TokenList;
+use crate::wallet::{Address, UserWallet, WalletCache};
 use blockchain::Blockchain;
 use client::Path;
 use generic_array::GenericArray;
 use hex::FromHex;
-use k256::ecdsa::SigningKey;
 use k256::SecretKey;
+use k256::ecdsa::SigningKey;
 use network::Cluster;
 use network::P2PNode;
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path;
@@ -27,50 +26,27 @@ use tokio::test;
 #[tokio::main]
 
 async fn main() {
-    // TODO: need to ping and ensure that the server is running, this will then route the data and maybe have the server send the signal of the blockchain so that the data can be all sent and stored on that blockchain, this method, we are creating a new blockchain every
-
     let args: Vec<String> = env::args().collect();
-    
-
-    /// testing here::
-    let time_u64 = luid::LUID::new();
-    println!("here is the function being called value -> {:?}", time_u64);
-
     if args.len() <= 2 {
-        // TODO: rewrite this to point users towards command -help
         println!("Err: Missing or incorrect arguments; Run 'cargo run command -help' ");
         return;
     }
-    // sort the command out function here.
-    let command_arg: &str = &args[1];
-    let command = client::sort_client_args_direction(command_arg);
 
-    if &args[2] == "-help" {
-        let command_help_path = "./command_list.json";
+    // sorting the command args here.
+    let command_func: &str = &args[1];
+    let command = client::sort_client_args_direction(command_func);
 
-        let read_commands = fs::read_to_string(command_help_path)
-            .expect("Err: Unable to read Command-help file path.");
-
-        let command_help: HashMap<String, String> = serde_json::from_str(&read_commands)
-            .expect("Err: Unable to read sliced file for commands -help");
-
-        println!("{}", command_help[&args[1].to_string()]);
+    // print out a description on the functionality of the functions requesting `help` for.
+    if &args[2] == "-help" || &args[2] == "-h" {
+        let help = client::get_help(args[1].to_string());
+        println!("{}", help.unwrap());
         return;
     }
 
-    let path = "./local_data/blockchain/blockchain.json";
-    let blockchain = if !path::Path::new(path).exists() {
-        let blockchain = new_blockchain().await;
-        println!("blockchain does not exist, creating a new file now..");
-        let data = serde_json::to_vec(&blockchain).expect("did not searlise");
-        let _ = fs::write("./local_data/blockchain/blockchain.json", data);
-        blockchain
-    } else {
-        println!("\nblockchain found and fetching data now... \nplease wait.. \n");
-        let file = fs::read(path).expect("unable to open blockchain file...");
-        let blockchain: Blockchain = serde_json::from_slice(&file).expect("erorr...");
-        blockchain
-    };
+    // fetches the blockchain which is just a local file currently and gets ready to do whatever
+    // the command requests is.
+    let blockchain = blockchain::Blockchain::get_blockchain().await;
+    //.unwrap();
 
     let blockchain_to_write = Arc::new(Mutex::new(blockchain));
     let p2p_node = P2PNode::new(blockchain_to_write.clone());
@@ -90,13 +66,7 @@ async fn main() {
     };
 }
 async fn create_new_block(p2p_node: &P2PNode, blockchain: Arc<Mutex<Blockchain>>, data: &str) {
-    let mut blockchain_lock = blockchain.lock().expect("Could not lock the blockchain");
-    blockchain_lock.add_block_to_chain(data.to_string());
-    let blockchain_copy = blockchain_lock.clone();
-    drop(blockchain_lock);
-
-    let data_update = serde_json::to_vec(&blockchain_copy).expect("did not searlise");
-    let _ = fs::write("./local_data/blockchain/blockchain.json", data_update);
+    Blockchain::create_new_block(blockchain, data).await;
     // TODO: create a peer to peer connection with a message of the block. then that message can be
     // added to each validator? could be more efficient.
     let network_path = "./network.json";
@@ -107,22 +77,21 @@ async fn create_new_block(p2p_node: &P2PNode, blockchain: Arc<Mutex<Blockchain>>
 
     for network in address_cluster.networks.clone() {
         println!("going through the networks now...");
-        if network.is_active == true {
-            P2PNode::connect_to_peer(&p2p_node, network.address.as_str(), &data).await;
+        if network.is_active {
+            P2PNode::connect_to_peer(p2p_node, network.address.as_str(), data).await;
         } else {
             println!("network is not active: {:?}", network);
         }
     }
-    return;
 }
 
+#[allow(dead_code)]
 async fn new_blockchain() -> Blockchain {
-    let blockchain = Blockchain::new();
-    return blockchain;
+    Blockchain::new()
 }
 
 async fn start_server(p2p_node: &P2PNode, address: String) {
-    if address == "default" || address == "" {
+    if address == "default" || address.is_empty() {
         if !path::Path::new("./network.json").exists() {
             p2p_node.creating_server("127.0.0.1:8080").await
         }
@@ -150,23 +119,22 @@ async fn create_wallet(name: String) {
 
 async fn wallet_login(_wallet_name: String, _wallet_password: String) {
     let path = "./localCache.json";
-    let wallet;
     if path::Path::new(path).exists() {
         let file = fs::read(path).expect("Err: Unable to open localCache file...");
         let wallet_cache: WalletCache = serde_json::from_slice(&file).expect("Err:");
-        if &_wallet_password != &wallet_cache.password {
+        if _wallet_password != wallet_cache.password {
             panic!("Err: Password input incorrect to use this wallet.");
         }
-        if &_wallet_name != &wallet_cache.wallet_info.name {
+        if _wallet_name != wallet_cache.wallet_info.name {
             panic!("Err: Wallet with that name does not exist.");
         }
-        wallet = wallet_cache;
     } else {
-        println!("Err: you must import a wallet, you can do this via the follow command; 'cargo run import-wallet <private-key> <password>");
-        return;
+        println!(
+            "Err: you must import a wallet, you can do this via the follow command; 'cargo run import-wallet <private-key> <password>"
+        );
     };
 
-    println!("Wallet details detials are here: {:?}", wallet);
+    println!("Wallet details detials are here: {:?}", ());
 }
 
 async fn wallet_logout(_wallet_name: String, _wallet_password: String) {
@@ -178,8 +146,9 @@ async fn wallet_logout(_wallet_name: String, _wallet_password: String) {
         println!("NOTE: Thank you for logging out. All local data is now deleted.");
     } else {
         println!("WARNING: No login detected, Logout may have been called already..");
-        println!("NOTE: If you need help, you can see all commands by running 'cargo run <command> -h' or to see list of commands by running 'cargo run command-list'");
-        return;
+        println!(
+            "NOTE: If you need help, you can see all commands by running 'cargo run <command> -h' or to see list of commands by running 'cargo run command-list'"
+        );
     }
 }
 
@@ -210,12 +179,14 @@ async fn import_wallet(wallet_name: String, private_key: String, wallet_password
             data
         );
         //TODO: either rewrite over or create another section and write a new wallet on there.
-    } else { 
+    } else {
         let user_info = UserWallet {
             name: wallet_name, // hardcoded for the moment.
-            address: Address { public_key: public_key_hex },
+            address: Address {
+                public_key: public_key_hex,
+            },
             currency_accounts: TokenList::new(), // TODO: will need to make it so we read from the blockchain and
-                                       // fetch these details from the public key generation.
+                                                 // fetch these details from the public key generation.
         };
 
         let wallet_cache = WalletCache {

@@ -1,15 +1,13 @@
+use crate::token::TokenList;
 use aes_gcm::aead::OsRng;
 use bip39::Mnemonic;
-use hex;
 use k256::ecdsa::SigningKey;
 use scanpw::scanpw;
 use serde_derive::Deserialize;
-use crate::token::{ TokenList, Token };
-
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct Address { 
-    pub public_key: String 
+pub struct Address {
+    pub public_key: String,
 }
 
 #[derive(serde_derive::Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -32,7 +30,7 @@ impl UserWallet {
         // for the currency section. and create a checker list to ensure that the name does
         // not exist.
         let password = scanpw!("Enter Password: "); // password may not be needed here....
-        let (private_key, public_key) = Self::generate_keys(); 
+        let (private_key, public_key) = Self::generate_keys();
         let addr = Self::address_new(public_key.clone());
         let wallet = UserWallet {
             name: name.clone(),
@@ -49,14 +47,11 @@ impl UserWallet {
 
         //TODO: will need to add to the list of current users. this will be used for searching up
         //other users via their name or public address.
-        return wallet;
+        wallet
     }
 
     fn address_new(pubkey: String) -> Address {
-        let address = Address {
-            public_key: pubkey
-        };
-        return address
+        Address { public_key: pubkey }
     }
 
     fn generate_phrase(key: String) -> String {
@@ -71,12 +66,10 @@ impl UserWallet {
         let ss = Mnemonic::parse(&s_phrase).expect("Err: Unable to convert back to Mnemonic");
         println!("ss here: {:?}", ss);
         let sss = Mnemonic::to_entropy(&ss);
-        let private_key_again_1: Vec<u8> = sss
-            .try_into()
-            .expect("Err: Unable to convert back to vec form.");
+        let private_key_again_1: Vec<u8> = sss;
         let private_key_again_2 = hex::encode(&private_key_again_1);
         println!("Private key again here: {:?}", private_key_again_2);
-        return s_phrase;
+        s_phrase
     }
 
     fn generate_keys() -> (String, String) {
@@ -90,26 +83,23 @@ impl UserWallet {
     }
 
     //pub fn wallet_existing(pubkey: String) -> bool {
-        // Requires local database implemented before using/ designing this function.
+    // Requires local database implemented before using/ designing this function.
 
     //}
 
     // TODO: let this be used to encrypt the passwords before being saved and then saved as a local
     // pem file that is encrypted and another function to descrypt it.
     //fn encrypt_local_wallet() {
-        // TODO: save keys to a pem file created. Should this be the process of the login wallet?
-        //let private_file_name = name.clone() + "private_key.pem";
-        //let public_file_name = name.clone() + "public_key.pem";
-        //let password_key = password.into_bytes();
-        //println!("{:?}", password_key);
-        //let _public_file = fs::write(public_file_name, public_key.as_bytes());
-        //let _privale_file = fs::write(private_file_name, private_key.as_bytes());
+    // TODO: save keys to a pem file created. Should this be the process of the login wallet?
+    //let private_file_name = name.clone() + "private_key.pem";
+    //let public_file_name = name.clone() + "public_key.pem";
+    //let password_key = password.into_bytes();
+    //println!("{:?}", password_key);
+    //let _public_file = fs::write(public_file_name, public_key.as_bytes());
+    //let _privale_file = fs::write(private_file_name, private_key.as_bytes());
     //}
     //TODO: pub fn transfer_currency(&mut self, ) // create function to transfer token and amount
     //to another address, if address doesnt exist on chain, bounce back or abort.
-     
-
-
 }
 
 #[test]
@@ -121,10 +111,8 @@ fn test_wallet_generating() {
 }
 #[cfg(test)]
 pub fn new_token_list() -> TokenList {
-    let tklst = TokenList {
-        tokens: vec![]
-    };
-    return tklst
+    let tklst = TokenList { tokens: vec![] };
+    tklst
 }
 #[test]
 fn test_wallet_token_list() {
